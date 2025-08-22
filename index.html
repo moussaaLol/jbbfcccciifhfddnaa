@@ -187,10 +187,10 @@
   <div class="code" id="stickyKeyValue" style="word-break:break-all;font-size:14px"></div>
   <div class="muted" style="font-size:12px;margin-top:8px">Copiez cette clé et conservez-la en lieu sûr.</div>
 </div>
-
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-functions-compat.js"></script>
 
 <script>
 /** =========================
@@ -199,20 +199,15 @@
 const DISCORD = {
   CLIENT_ID: '1407764995671986249', // TODO: ton client_id
   GUILD_ID: '1406489247543984240',  // TODO: ID de ta guilde
-  // Scopes nécessaires pour lire les rôles du membre
   SCOPES: ['identify', 'guilds.members.read'],
-  // URL de redirection = cette même page (adapter si besoin)
   REDIRECT_URI:'https://nazapi.dreamweave.lol/',
   PREMIUM_ROLE_ID: '1406489247573086400', // Premium
   VIP_ROLE_ID:      '1406489247564824669', // VIP
 };
 
 const STRIPE = {
-  // OPTION A: colle ici ton Payment Link (aucun backend requis)
-  PAYMENT_LINK_URL: 'https://buy.stripe.com/test_8x26ozdO6f9naYYaJpbZe00', // ex: 'https://buy.stripe.com/xxxxxx' (sinon laisser vide)
-
-  // OPTION B: si tu as un petit endpoint backend qui retourne {url:"https://checkout.stripe.com/..."}
-  CREATE_SESSION_URL: '' // ex: '/api/create-checkout-session'
+  PAYMENT_LINK_URL: 'https://buy.stripe.com/test_8x26ozdO6f9naYYaJpbZe00',
+  CREATE_SESSION_URL: ''
 };
 
 const FIREBASE_CFG = {
@@ -221,13 +216,9 @@ const FIREBASE_CFG = {
   projectId: "nazapi-fc74e",
   storageBucket: "nazapi-fc74e.firebasestorage.app",
   appId: "1:1011679210688:web:eeccc40063f83b91e3d125",
-  // … autres champs facultatifs
 };
 
-// Chemin de licences (identique à ton bot)
 const LICENSES_PATH = '/artifacts/' + ('default-app-id') + '/public/data/licenses';
-
-// Durée Premium par défaut (30 jours) comme dans ton code (2592000000 ms)
 const THIRTY_DAYS_MS = 2592000000;
 
 /** =========================
@@ -237,7 +228,6 @@ const $ = sel => document.querySelector(sel);
 const sleep = (ms)=> new Promise(r => setTimeout(r, ms));
 const toHexUpper = (buf) => [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();
 
-// Génère une clé identique à la logique Node: crypto.randomBytes(16).toString('hex').toUpperCase()
 function generateLicenseKey() {
   const arr = new Uint8Array(16);
   crypto.getRandomValues(arr);
@@ -248,6 +238,7 @@ function generateLicenseKey() {
 firebase.initializeApp(FIREBASE_CFG);
 const db = firebase.firestore();
 const auth = firebase.auth();
+const functions = firebase.functions(); // <-- C'est la ligne qui vous manquait
 
 /** =========================
  * DISCORD OAUTH IMPLICIT GRANT
@@ -262,7 +253,6 @@ function loginDiscord() {
   window.location.href = `https://discord.com/oauth2/authorize?${params.toString()}`;
 }
 
-// Lit le token d'accès depuis l’URL (#access_token=…)
 function parseImplicitToken() {
   if (window.location.hash.startsWith('#')) {
     const h = new URLSearchParams(window.location.hash.slice(1));
@@ -270,7 +260,6 @@ function parseImplicitToken() {
       const token = h.get('access_token');
       const tokenType = h.get('token_type') || 'Bearer';
       const expires = Number(h.get('expires_in') || 0);
-      // Nettoie le hash de l'URL pour une meilleure expérience utilisateur
       history.replaceState({}, document.title, window.location.pathname + window.location.search);
       return { token, tokenType, expires };
     }
@@ -307,7 +296,6 @@ let discordAuth = null;
 let discordUser = null;
 let discordMember = null;
 
-// Persistance simple (token en mémoire + sessionStorage)
 function saveSession() {
   sessionStorage.setItem('nazapi_discord_auth', JSON.stringify(discordAuth || null));
   sessionStorage.setItem('nazapi_discord_user', JSON.stringify(discordUser || null));
@@ -353,7 +341,7 @@ function setLoggedInUI(hasPremium) {
   if (hasPremium) {
     accountState.innerHTML = `<div class="ok-text">Accès Premium/VIP validé ✔</div><div class="muted" style="font-size:13px">Tu peux utiliser la recherche.</div>`;
     purchaseBlock.classList.add('hide');
-    activationBlock.classList.remove('hide'); // on laisse l’activation visible pour les clés existantes
+    activationBlock.classList.remove('hide');
     searchGate.classList.add('hide');
     searchUI.classList.remove('hide');
   } else {
@@ -367,11 +355,8 @@ function setLoggedInUI(hasPremium) {
 
 async function updateFromDiscord(token) {
   try{
-    // Infos utilisateur
     discordUser = await fetchDiscordJSON(token, '/users/@me');
-    // Roles du membre dans TA guilde (nécessite scope guilds.members.read)
     let memberObj = await fetchDiscordJSON(token, `/users/@me/guilds/${DISCORD.GUILD_ID}/member`);
-    // normalise: memberObj.roles = array of role ids
     discordMember = { roles: (memberObj.roles||[]) };
 
     saveSession();
@@ -384,23 +369,17 @@ async function updateFromDiscord(token) {
   }
 }
 
-// Déconnexion locale
 function logout(){
   discordAuth = discordUser = discordMember = null;
   saveSession();
   setLoggedOutUI();
 }
 
-/** =========================
- * ACHAT STRIPE
- * ========================= */
 async function handleBuy() {
-  // Option A : Payment Link direct (zéro backend)
   if (STRIPE.PAYMENT_LINK_URL) {
     window.location.href = STRIPE.PAYMENT_LINK_URL;
     return;
   }
-  // Option B : Endpoint backend (si fourni)
   if (STRIPE.CREATE_SESSION_URL) {
     try{
       const r = await fetch(STRIPE.CREATE_SESSION_URL, { method:'POST' });
@@ -413,22 +392,17 @@ async function handleBuy() {
   alert('Stripe n’est pas configuré (ajoute PAYMENT_LINK_URL ou CREATE_SESSION_URL).');
 }
 
-/** =========================
- * CLÉS — Firestore (mêmes champs que ton bot)
- * ========================= */
 async function createLicenseForUser(name='NazAPI Premium - 30 jours', expiresIn=THIRTY_DAYS_MS, source='manual') {
-  // construit l’objet identique à ton bot
   const keyData = {
-    key: generateLicenseKey(),              // même format 32 HEX upper
+    key: generateLicenseKey(),
     name,
     expiresAt: Date.now() + expiresIn,
-    status: 'unused',                      // non activée par défaut (comme tes clés manuelles/stripe)
+    status: 'unused',
     createdAt: Date.now(),
     activatedBy: null,
-    source: source,                        // 'manual' | 'stripe' | 'request'
-    unusedExpiresAt: source === 'manual' ? Date.now() + 3600000 : null // 1h si manuel
+    source: source,
+    unusedExpiresAt: source === 'manual' ? Date.now() + 3600000 : null
   };
-  // Écriture Firestore (même collection que ton bot)
   await db.collection(LICENSES_PATH).add(keyData);
   return keyData;
 }
@@ -436,7 +410,6 @@ async function createLicenseForUser(name='NazAPI Premium - 30 jours', expiresIn=
 async function activateExistingKeyForUser(key) {
   if (!discordUser) throw new Error('Non connecté');
 
-  // trouver la clé
   const snap = await db.collection(LICENSES_PATH).where('key','==',key).get();
   if (snap.empty) throw new Error('Clé invalide');
 
@@ -444,16 +417,11 @@ async function activateExistingKeyForUser(key) {
   const data = snap.docs[0].data();
 
   if (data.status !== 'unused') throw new Error('Clé déjà activée ou expirée');
-
   if (data.unusedExpiresAt && data.unusedExpiresAt <= Date.now()) {
     await docRef.update({ status: 'expired' });
     throw new Error('Clé expirée (non utilisée à temps)');
   }
-
-  // Vérifier que l’utilisateur n’a pas déjà une licence active
-  const q2 = await db.collection(LICENSES_PATH)
-    .where('activatedBy','==', discordUser.id)
-    .where('status','==','active').get();
+  const q2 = await db.collection(LICENSES_PATH).where('activatedBy','==', discordUser.id).where('status','==','active').get();
   if (!q2.empty) throw new Error('Vous avez déjà une licence active');
 
   await docRef.update({
@@ -465,83 +433,45 @@ async function activateExistingKeyForUser(key) {
 }
 
 /** =========================
- * RECHERCHE “SUR LE SITE”
- * (démo : tu peux brancher ton endpoint actuel si besoin)
+ * LA NOUVELLE FONCTION DE RECHERCHE QUI APPELLE LA CLOUD FUNCTION
  * ========================= */
 async function runSearch(term){
   if (!term || term.trim().length < 2) { progress.textContent = 'Terme trop court.'; return; }
-  results.innerHTML = ''; progress.textContent = 'Scan en cours…';
+  results.innerHTML = ''; progress.textContent = 'Recherche en cours...';
 
-  // 👉 Voici comment vous pourriez brancher la logique de recherche réelle
-  // en utilisant votre endpoint ou en interrogeant Firestore directement.
-  // Exemple de code pour un "backend" hypothétique (à adapter) :
-  /*
-  const searchResults = await fetch(`/api/search?q=${encodeURIComponent(term)}`);
-  const found = await searchResults.json();
-  */
+  try {
+    // Appel de la Cloud Function 'searchFiles'
+    const searchFunction = functions.httpsCallable('searchFiles');
+    const response = await searchFunction({ query: term });
+    const found = response.data.results;
 
-  // DEMO : on "simule" 3 fichiers trouvés avec la ligne correspondante.
-  const filesToSearch = ['docs/premium.json', 'data/index.md', 'notes/tips.txt'];
-  const found = [];
-
-  for (const file of filesToSearch) {
-    progress.textContent = `Recherche dans : ${file}...`;
-    await sleep(200); // Pour simuler un court délai de recherche
-    
-    // Simule la recherche du terme dans le fichier
-    if (file.includes('premium.json')) {
-      if (term.includes('key')) {
-        found.push({
-          nom: 'docs/premium.json',
-          chemin: 'docs/premium.json',
-          ligne: `const key = generateLicenseKey();`,
-          downloadUrl: `https://nazapi.dreamweave.lol/download?path=${encodeURIComponent('docs/premium.json')}`
-        });
-      }
-    } else if (file.includes('index.md')) {
-      if (term.includes('api')) {
-        found.push({
-          nom: 'data/index.md',
-          chemin: 'data/index.md',
-          ligne: `## API Documentation`,
-          downloadUrl: `https://nazapi.dreamweave.lol/download?path=${encodeURIComponent('data/index.md')}`
-        });
-      }
-    } else if (file.includes('tips.txt')) {
-      if (term.includes('discord')) {
-        found.push({
-          nom: 'notes/tips.txt',
-          chemin: 'notes/tips.txt',
-          ligne: `Note: Discord bot setup is in this file.`,
-          downloadUrl: `https://nazapi.dreamweave.lol/download?path=${encodeURIComponent('notes/tips.txt')}`
-        });
-      }
+    if (found.length === 0) {
+      progress.textContent = `Aucun résultat trouvé pour "${term}".`;
+      return;
     }
-  }
 
-  if (found.length === 0) {
-    progress.textContent = `Aucun résultat trouvé pour "${term}".`;
-    return;
-  }
-
-  progress.textContent = `Résultats : ${found.length} trouvé(s).`;
-  for (const r of found) {
-    const el = document.createElement('div');
-    el.className='card';
-    el.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <div style="font-weight:700">📄 ${r.nom}</div>
-          <div class="muted" style="font-size:12px">${r.chemin}</div>
+    progress.textContent = `Résultats : ${found.length} trouvé(s).`;
+    for (const r of found) {
+      const el = document.createElement('div');
+      el.className='card';
+      el.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:700">📄 ${r.nom}</div>
+            <div class="muted" style="font-size:12px">${r.chemin}</div>
+          </div>
+          <a href="${r.downloadUrl}" download="${r.nom}" class="btn">
+            Télécharger
+          </a>
         </div>
-        <a href="${r.downloadUrl}" download="${r.nom}" class="btn">
-          Télécharger
-        </a>
-      </div>
-      <div class="divider"></div>
-      <pre class="code" style="white-space:pre-wrap;margin:0">Ligne trouvée : ${r.ligne}</pre>
-    `;
-    results.appendChild(el);
+        <div class="divider"></div>
+        <pre class="code" style="white-space:pre-wrap;margin:0">${r.ligne}</pre>
+      `;
+      results.appendChild(el);
+    }
+  } catch (error) {
+    console.error('Erreur lors de l’appel de la fonction de recherche :', error);
+    progress.textContent = `Erreur : ${error.message}`;
   }
 }
 
@@ -574,23 +504,18 @@ $('#doSearch').addEventListener('click', ()=> runSearch($('#q').value));
 
 $('#closeSticky').addEventListener('click', ()=> stickyKey.classList.add('hide'));
 
-// Au chargement: regarder si un token Discord est revenu dans l’URL
 (async function init(){
   setLoggedOutUI();
-  // Auth Firebase basique (anonyme) pour écrire si règles le permettent
   try { await auth.signInAnonymously(); } catch {}
   
-  // Lit le token d'accès depuis l'URL (#)
   const parsedToken = parseImplicitToken();
 
   if (parsedToken) {
     discordAuth = parsedToken;
   } else {
-    // Si pas de token dans l'URL, on essaie de charger la session précédente
     loadSession();
   }
 
-  // Si un token est présent (soit depuis l'URL, soit depuis la session)
   if (discordAuth?.token) {
     console.log('Jeton Discord détecté, tentative de connexion...');
     await updateFromDiscord(discordAuth.token);
@@ -598,11 +523,8 @@ $('#closeSticky').addEventListener('click', ()=> stickyKey.classList.add('hide')
     console.log('Aucun jeton Discord trouvé. Reste déconnecté.');
   }
 
-  // Astuce: si tu veux générer une clé “post-achat” manuellement (par ex. après un Payment Link),
-  // tu peux ajouter ?grantKey=1 dans l’URL pour afficher un bouton de génération rapide.
   const url = new URL(location.href);
   if (url.searchParams.get('grantKey') === '1') {
-    // Génère une clé (source=manual) et l’affiche dans le panneau persistant
     try{
       const keyObj = await createLicenseForUser('NazAPI Premium - 30 jours', THIRTY_DAYS_MS, 'manual');
       stickyKeyValue.textContent = keyObj.key;
