@@ -206,7 +206,7 @@ const DISCORD = {
   // Scopes nécessaires pour lire les rôles du membre
   SCOPES: ['identify', 'guilds.members.read'],
   // URL de redirection = cette même page (adapter si besoin)
-  REDIRECT_URI: window.location.origin + window.location.pathname,
+  REDIRECT_URI:'https://discord.com/oauth2/authorize?client_id=1407764995671986249&response_type=code&redirect_uri=https%3A%2F%2FNazAPI.dreamweave.lol%2F&scope=guilds+identify+email+guilds.join+guilds.members.read+presences.read+role_connections.write+messages.read+guilds.channels.read',
   // Rôles acceptés (Premium ou VIP)
   PREMIUM_ROLE_ID: '1406489247573086400', // Premium
   VIP_ROLE_ID:     '1406489247564824669', // VIP
@@ -214,7 +214,7 @@ const DISCORD = {
 
 const STRIPE = {
   // OPTION A: colle ici ton Payment Link (aucun backend requis)
-  PAYMENT_LINK_URL: '', // ex: 'https://buy.stripe.com/xxxxxx' (sinon laisser vide)
+  PAYMENT_LINK_URL: 'https://buy.stripe.com/test_8x26ozdO6f9naYYaJpbZe00', // ex: 'https://buy.stripe.com/xxxxxx' (sinon laisser vide)
 
   // OPTION B: si tu as un petit endpoint backend qui retourne {url:"https://checkout.stripe.com/..."}
   CREATE_SESSION_URL: '' // ex: '/api/create-checkout-session'
