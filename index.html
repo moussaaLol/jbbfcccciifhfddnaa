@@ -264,7 +264,7 @@ function loginDiscord() {
     redirect_uri: DISCORD.REDIRECT_URI,
     scope: DISCORD.SCOPES.join(' ')
   });
-  window.location.href = `https://discord.com/oauth2/authorize?${params.toString()}`;
+  window.location.href = DISCORD.REDIRECT_URI;
 }
 
 // Récupère le token depuis l’URL (#access_token=…)
