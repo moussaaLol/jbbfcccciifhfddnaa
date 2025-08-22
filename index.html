@@ -472,22 +472,75 @@ async function runSearch(term){
   if (!term || term.trim().length < 2) { progress.textContent = 'Terme trop court.'; return; }
   results.innerHTML = ''; progress.textContent = 'Scan en cours…';
 
-  // 👉 Ici, branche ton endpoint de recherche si tu en as un.
-  // Démo : on “simule” 3 fichiers trouvés + extrait contenant le terme.
-  await sleep(600);
-  const found = [
-    { nom:'docs/premium.json', chemin:'docs/premium.json', line:`"... ${term} ..."`, },
-    { nom:'data/index.md', chemin:'data/index.md', line:`"## ${term} – section"`},
-    { nom:'notes/tips.txt', chemin:'notes/tips.txt', line:`"${term} apparaît ici"`},
-  ];
-  progress.textContent = `Résultats: ${found.length}`;
+  // 👉 Voici comment vous pourriez brancher la logique de recherche réelle
+  // en utilisant votre endpoint ou en interrogeant Firestore directement.
+  // Exemple de code pour un "backend" hypothétique (à adapter) :
+  /*
+  const searchResults = await fetch(`/api/search?q=${encodeURIComponent(term)}`);
+  const found = await searchResults.json();
+  */
+
+  // DEMO : on "simule" 3 fichiers trouvés avec la ligne correspondante.
+  const filesToSearch = ['docs/premium.json', 'data/index.md', 'notes/tips.txt'];
+  const found = [];
+
+  for (const file of filesToSearch) {
+    progress.textContent = `Recherche dans : ${file}...`;
+    await sleep(200); // Pour simuler un court délai de recherche
+    
+    // Simule la recherche du terme dans le fichier
+    if (file.includes('premium.json')) {
+      if (term.includes('key')) {
+        found.push({
+          nom: 'docs/premium.json',
+          chemin: 'docs/premium.json',
+          ligne: `const key = generateLicenseKey();`,
+          downloadUrl: `https://nazapi.dreamweave.lol/download?path=${encodeURIComponent('docs/premium.json')}`
+        });
+      }
+    } else if (file.includes('index.md')) {
+      if (term.includes('api')) {
+        found.push({
+          nom: 'data/index.md',
+          chemin: 'data/index.md',
+          ligne: `## API Documentation`,
+          downloadUrl: `https://nazapi.dreamweave.lol/download?path=${encodeURIComponent('data/index.md')}`
+        });
+      }
+    } else if (file.includes('tips.txt')) {
+      if (term.includes('discord')) {
+        found.push({
+          nom: 'notes/tips.txt',
+          chemin: 'notes/tips.txt',
+          ligne: `Note: Discord bot setup is in this file.`,
+          downloadUrl: `https://nazapi.dreamweave.lol/download?path=${encodeURIComponent('notes/tips.txt')}`
+        });
+      }
+    }
+  }
+
+  if (found.length === 0) {
+    progress.textContent = `Aucun résultat trouvé pour "${term}".`;
+    return;
+  }
+
+  progress.textContent = `Résultats : ${found.length} trouvé(s).`;
   for (const r of found) {
     const el = document.createElement('div');
     el.className='card';
-    el.innerHTML = `<div style="font-weight:700">📄 ${r.nom}</div>
-    <div class="muted" style="font-size:12px">${r.chemin}</div>
-    <div class="divider"></div>
-    <pre class="code" style="white-space:pre-wrap;margin:0">${r.line}</pre>`;
+    el.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-weight:700">📄 ${r.nom}</div>
+          <div class="muted" style="font-size:12px">${r.chemin}</div>
+        </div>
+        <a href="${r.downloadUrl}" download="${r.nom}" class="btn">
+          Télécharger
+        </a>
+      </div>
+      <div class="divider"></div>
+      <pre class="code" style="white-space:pre-wrap;margin:0">Ligne trouvée : ${r.ligne}</pre>
+    `;
     results.appendChild(el);
   }
 }
