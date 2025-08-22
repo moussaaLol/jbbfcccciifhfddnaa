@@ -193,345 +193,73 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-functions-compat.js"></script>
 
 <script>
-/** =========================
- * TODO — PARAMÈTRES À RENSEIGNER
- * ========================= */
-const DISCORD = {
-  CLIENT_ID: '1407764995671986249', // TODO: ton client_id
-  GUILD_ID: '1406489247543984240',  // TODO: ID de ta guilde
-  SCOPES: ['identify', 'guilds.members.read'],
-  REDIRECT_URI:'https://nazapi.dreamweave.lol/',
-  PREMIUM_ROLE_ID: '1406489247573086400', // Premium
-  VIP_ROLE_ID:      '1406489247564824669', // VIP
-};
+  const functions = require('firebase-functions');
+const admin = require('firebase-admin');
+const { Storage } = require('@google-cloud/storage');
+const cors = require('cors')({ origin: true }); // Importez le middleware CORS
 
-const STRIPE = {
-  PAYMENT_LINK_URL: 'https://buy.stripe.com/test_8x26ozdO6f9naYYaJpbZe00',
-  CREATE_SESSION_URL: ''
-};
+admin.initializeApp();
+const storage = new Storage();
+const bucketName = 'nazapi-fc74e.appspot.com';
 
-const FIREBASE_CFG = {
-  apiKey: "AIzaSyBtVmI_0_9qC6Cj5lmYgbwVJlW8lH11Ouw",
-  authDomain: "nazapi-fc74e.firebaseapp.com",
-  projectId: "nazapi-fc74e",
-  storageBucket: "nazapi-fc74e.firebasestorage.app",
-  appId: "1:1011679210688:web:eeccc40063f83b91e3d125",
-};
+/**
+ * Fonction HTTP callable pour la recherche de fichiers dans Storage.
+ * Elle prend en paramètre un objet de données contenant le terme de recherche.
+ */
+exports.searchFiles = functions.https.onCall(async (data, context) => {
+    
+    // Le middleware CORS s'exécute automatiquement pour les fonctions HTTPS Callable
+    // mais il est utile de le voir ici pour comprendre ce qui se passe.
+    // L'en-tête 'Access-Control-Allow-Origin' est géré par onCall.
 
-const LICENSES_PATH = '/artifacts/' + ('default-app-id') + '/public/data/licenses';
-const THIRTY_DAYS_MS = 2592000000;
-
-/** =========================
- * UTILITAIRES
- * ========================= */
-const $ = sel => document.querySelector(sel);
-const sleep = (ms)=> new Promise(r => setTimeout(r, ms));
-const toHexUpper = (buf) => [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();
-
-function generateLicenseKey() {
-  const arr = new Uint8Array(16);
-  crypto.getRandomValues(arr);
-  return toHexUpper(arr.buffer);
-}
-
-// Initialisation Firebase
-firebase.initializeApp(FIREBASE_CFG);
-const db = firebase.firestore();
-const auth = firebase.auth();
-const functions = firebase.functions(); // <-- C'est la ligne qui vous manquait
-
-/** =========================
- * DISCORD OAUTH IMPLICIT GRANT
- * ========================= */
-function loginDiscord() {
-  const params = new URLSearchParams({
-    client_id: DISCORD.CLIENT_ID,
-    response_type: 'token',              
-    redirect_uri: DISCORD.REDIRECT_URI,
-    scope: DISCORD.SCOPES.join(' ')
-  });
-  window.location.href = `https://discord.com/oauth2/authorize?${params.toString()}`;
-}
-
-function parseImplicitToken() {
-  if (window.location.hash.startsWith('#')) {
-    const h = new URLSearchParams(window.location.hash.slice(1));
-    if (h.get('access_token')) {
-      const token = h.get('access_token');
-      const tokenType = h.get('token_type') || 'Bearer';
-      const expires = Number(h.get('expires_in') || 0);
-      history.replaceState({}, document.title, window.location.pathname + window.location.search);
-      return { token, tokenType, expires };
-    }
-  }
-  return null;
-}
-
-async function fetchDiscordJSON(token, path) {
-  const r = await fetch(`https://discord.com/api${path}`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  if (!r.ok) throw new Error('Discord API error: ' + r.status);
-  return r.json();
-}
-
-/** =========================
- * UI & FLUX
- * ========================= */
-const userBadge = $('#userBadge');
-const loginBtn = $('#loginBtn');
-const logoutBtn = $('#logoutBtn');
-const rolesChips = $('#rolesChips');
-const accountState = $('#accountState');
-const purchaseBlock = $('#purchaseBlock');
-const activationBlock = $('#activationBlock');
-const searchGate = $('#searchGate');
-const searchUI = $('#searchUI');
-const results = $('#results');
-const progress = $('#progress');
-const stickyKey = $('#stickyKey');
-const stickyKeyValue = $('#stickyKeyValue');
-
-let discordAuth = null;
-let discordUser = null;
-let discordMember = null;
-
-function saveSession() {
-  sessionStorage.setItem('nazapi_discord_auth', JSON.stringify(discordAuth || null));
-  sessionStorage.setItem('nazapi_discord_user', JSON.stringify(discordUser || null));
-  sessionStorage.setItem('nazapi_discord_member', JSON.stringify(discordMember || null));
-}
-function loadSession() {
-  try{
-    discordAuth  = JSON.parse(sessionStorage.getItem('nazapi_discord_auth')||'null');
-    discordUser  = JSON.parse(sessionStorage.getItem('nazapi_discord_user')||'null');
-    discordMember= JSON.parse(sessionStorage.getItem('nazapi_discord_member')||'null');
-  }catch{}
-}
-
-function setLoggedOutUI() {
-  userBadge.textContent = 'Non connecté';
-  rolesChips.innerHTML = '';
-  accountState.innerHTML = `<div class="muted">Connecte-toi avec Discord pour vérifier tes rôles sur le serveur.</div>`;
-  purchaseBlock.classList.add('hide');
-  activationBlock.classList.add('hide');
-  searchGate.classList.remove('hide');
-  searchUI.classList.add('hide');
-  logoutBtn.classList.add('hide');
-  loginBtn.classList.remove('hide');
-}
-
-function showRolesChips(member){
-  rolesChips.innerHTML = '';
-  if (!member || !Array.isArray(member.roles)) return;
-  member.roles.forEach(id=>{
-    const span = document.createElement('span');
-    span.className='role-chip';
-    span.textContent = (id===DISCORD.PREMIUM_ROLE_ID?'Premium':(id===DISCORD.VIP_ROLE_ID?'VIP':('Rôle '+id)));
-    rolesChips.appendChild(span);
-  });
-}
-
-function setLoggedInUI(hasPremium) {
-  userBadge.textContent = discordUser ? `${discordUser.username}#${discordUser.discriminator || '0'}` : 'Connecté';
-  showRolesChips({roles: discordMember?.roles || []});
-  logoutBtn.classList.remove('hide');
-  loginBtn.classList.add('hide');
-
-  if (hasPremium) {
-    accountState.innerHTML = `<div class="ok-text">Accès Premium/VIP validé ✔</div><div class="muted" style="font-size:13px">Tu peux utiliser la recherche.</div>`;
-    purchaseBlock.classList.add('hide');
-    activationBlock.classList.remove('hide');
-    searchGate.classList.add('hide');
-    searchUI.classList.remove('hide');
-  } else {
-    accountState.innerHTML = `<div class="danger-text">Accès Premium requis</div><div class="muted" style="font-size:13px">Achète Premium (16,99 €) ou active une clé existante.</div>`;
-    purchaseBlock.classList.remove('hide');
-    activationBlock.classList.remove('hide');
-    searchGate.classList.remove('hide');
-    searchUI.classList.add('hide');
-  }
-}
-
-async function updateFromDiscord(token) {
-  try{
-    discordUser = await fetchDiscordJSON(token, '/users/@me');
-    let memberObj = await fetchDiscordJSON(token, `/users/@me/guilds/${DISCORD.GUILD_ID}/member`);
-    discordMember = { roles: (memberObj.roles||[]) };
-
-    saveSession();
-
-    const hasPremium = discordMember.roles.includes(DISCORD.PREMIUM_ROLE_ID) || discordMember.roles.includes(DISCORD.VIP_ROLE_ID);
-    setLoggedInUI(hasPremium);
-  }catch(e){
-    console.error('Erreur lors de la mise à jour depuis Discord :', e);
-    setLoggedOutUI();
-  }
-}
-
-function logout(){
-  discordAuth = discordUser = discordMember = null;
-  saveSession();
-  setLoggedOutUI();
-}
-
-async function handleBuy() {
-  if (STRIPE.PAYMENT_LINK_URL) {
-    window.location.href = STRIPE.PAYMENT_LINK_URL;
-    return;
-  }
-  if (STRIPE.CREATE_SESSION_URL) {
-    try{
-      const r = await fetch(STRIPE.CREATE_SESSION_URL, { method:'POST' });
-      const data = await r.json();
-      if (data.url) { window.location.href = data.url; return; }
-      alert('Impossible d’ouvrir la page de paiement.');
-    }catch(e){ alert('Erreur de paiement'); }
-    return;
-  }
-  alert('Stripe n’est pas configuré (ajoute PAYMENT_LINK_URL ou CREATE_SESSION_URL).');
-}
-
-async function createLicenseForUser(name='NazAPI Premium - 30 jours', expiresIn=THIRTY_DAYS_MS, source='manual') {
-  const keyData = {
-    key: generateLicenseKey(),
-    name,
-    expiresAt: Date.now() + expiresIn,
-    status: 'unused',
-    createdAt: Date.now(),
-    activatedBy: null,
-    source: source,
-    unusedExpiresAt: source === 'manual' ? Date.now() + 3600000 : null
-  };
-  await db.collection(LICENSES_PATH).add(keyData);
-  return keyData;
-}
-
-async function activateExistingKeyForUser(key) {
-  if (!discordUser) throw new Error('Non connecté');
-
-  const snap = await db.collection(LICENSES_PATH).where('key','==',key).get();
-  if (snap.empty) throw new Error('Clé invalide');
-
-  const docRef = snap.docs[0].ref;
-  const data = snap.docs[0].data();
-
-  if (data.status !== 'unused') throw new Error('Clé déjà activée ou expirée');
-  if (data.unusedExpiresAt && data.unusedExpiresAt <= Date.now()) {
-    await docRef.update({ status: 'expired' });
-    throw new Error('Clé expirée (non utilisée à temps)');
-  }
-  const q2 = await db.collection(LICENSES_PATH).where('activatedBy','==', discordUser.id).where('status','==','active').get();
-  if (!q2.empty) throw new Error('Vous avez déjà une licence active');
-
-  await docRef.update({
-    status:'active',
-    activatedBy: discordUser.id,
-    activatedAt: Date.now()
-  });
-  return { ...data, status:'active', activatedBy: discordUser.id };
-}
-
-/** =========================
- * LA NOUVELLE FONCTION DE RECHERCHE QUI APPELLE LA CLOUD FUNCTION
- * ========================= */
-async function runSearch(term){
-  if (!term || term.trim().length < 2) { progress.textContent = 'Terme trop court.'; return; }
-  results.innerHTML = ''; progress.textContent = 'Recherche en cours...';
-
-  try {
-    // Appel de la Cloud Function 'searchFiles'
-    const searchFunction = functions.httpsCallable('searchFiles');
-    const response = await searchFunction({ query: term });
-    const found = response.data.results;
-
-    if (found.length === 0) {
-      progress.textContent = `Aucun résultat trouvé pour "${term}".`;
-      return;
+    // Vérification de l'authentification
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'La fonction requiert une authentification.');
     }
 
-    progress.textContent = `Résultats : ${found.length} trouvé(s).`;
-    for (const r of found) {
-      const el = document.createElement('div');
-      el.className='card';
-      el.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <div style="font-weight:700">📄 ${r.nom}</div>
-            <div class="muted" style="font-size:12px">${r.chemin}</div>
-          </div>
-          <a href="${r.downloadUrl}" download="${r.nom}" class="btn">
-            Télécharger
-          </a>
-        </div>
-        <div class="divider"></div>
-        <pre class="code" style="white-space:pre-wrap;margin:0">${r.ligne}</pre>
-      `;
-      results.appendChild(el);
+    const searchTerm = (data.query || '').toLowerCase();
+    if (searchTerm.length < 2) {
+        throw new functions.https.HttpsError('invalid-argument', 'Le terme de recherche est trop court.');
     }
-  } catch (error) {
-    console.error('Erreur lors de l’appel de la fonction de recherche :', error);
-    progress.textContent = `Erreur : ${error.message}`;
-  }
-}
 
-/** =========================
- * EVENTS
- * ========================= */
-$('#year').textContent = new Date().getFullYear();
+    const bucket = storage.bucket(bucketName);
+    const foundResults = [];
 
-loginBtn.addEventListener('click', loginDiscord);
-logoutBtn.addEventListener('click', logout);
+    const [files] = await bucket.getFiles();
 
-$('#buyBtn').addEventListener('click', handleBuy);
-$('#haveKeyBtn').addEventListener('click', ()=> activationBlock.scrollIntoView({behavior:'smooth',block:'center'}));
+    for (const file of files) {
+        try {
+            if (file.metadata.contentType.startsWith('image/') || file.metadata.size > 1000000) {
+                continue;
+            }
 
-$('#activateKeyBtn').addEventListener('click', async ()=>{
-  const input = $('#keyInput'); const key = (input.value||'').trim().toUpperCase();
-  $('#activationMsg').classList.remove('ok-text','danger-text'); $('#activationMsg').textContent='';
-  try{
-    if (!key || key.length !== 32) throw new Error('Clé invalide (32 caractères requis).');
-    const activated = await activateExistingKeyForUser(key);
-    $('#activationMsg').classList.add('ok-text');
-    $('#activationMsg').textContent = '✅ Clé activée. Ton rôle sera synchronisé côté serveur.';
-  }catch(e){
-    $('#activationMsg').classList.add('danger-text');
-    $('#activationMsg').textContent = '❌ ' + e.message;
-  }
+            const fileContent = await file.download();
+            const contentString = fileContent.toString('utf8');
+            const lines = contentString.split('\n');
+            let lineNumber = 0;
+
+            for (const line of lines) {
+                lineNumber++;
+                if (line.toLowerCase().includes(searchTerm)) {
+                    foundResults.push({
+                        nom: file.name.split('/').pop(),
+                        chemin: file.name,
+                        ligne: `Ligne ${lineNumber}: ${line.trim()}`,
+                        downloadUrl: await file.getSignedUrl({
+                            action: 'read',
+                            expires: Date.now() + 1000 * 60 * 5
+                        })
+                    });
+                    break;
+                }
+            }
+        } catch (error) {
+            console.error(`Erreur lors de la lecture du fichier ${file.name}:`, error);
+        }
+    }
+
+    return { results: foundResults };
 });
-
-$('#doSearch').addEventListener('click', ()=> runSearch($('#q').value));
-
-$('#closeSticky').addEventListener('click', ()=> stickyKey.classList.add('hide'));
-
-(async function init(){
-  setLoggedOutUI();
-  try { await auth.signInAnonymously(); } catch {}
-  
-  const parsedToken = parseImplicitToken();
-
-  if (parsedToken) {
-    discordAuth = parsedToken;
-  } else {
-    loadSession();
-  }
-
-  if (discordAuth?.token) {
-    console.log('Jeton Discord détecté, tentative de connexion...');
-    await updateFromDiscord(discordAuth.token);
-  } else {
-    console.log('Aucun jeton Discord trouvé. Reste déconnecté.');
-  }
-
-  const url = new URL(location.href);
-  if (url.searchParams.get('grantKey') === '1') {
-    try{
-      const keyObj = await createLicenseForUser('NazAPI Premium - 30 jours', THIRTY_DAYS_MS, 'manual');
-      stickyKeyValue.textContent = keyObj.key;
-      stickyKey.classList.remove('hide');
-    }catch(e){ console.error(e); }
-  }
-})();
 </script>
 </body>
 </html>
