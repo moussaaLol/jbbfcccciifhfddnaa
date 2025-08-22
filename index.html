@@ -259,13 +259,14 @@ const auth = firebase.auth();
 function loginDiscord() {
   const params = new URLSearchParams({
     client_id: DISCORD.CLIENT_ID,
-    response_type: 'token',              // implicit grant (client-side)
+    // Le paramètre crucial : demander un "token" et non un "code"
+    response_type: 'token',              
     redirect_uri: DISCORD.REDIRECT_URI,
     scope: DISCORD.SCOPES.join(' ')
   });
-  window.location.href = DISCORD.REDIRECT_URI;
+  // Construisez l'URL de redirection avec les paramètres corrects
+  window.location.href = `https://discord.com/oauth2/authorize?${params.toString()}`;
 }
-
 // Récupère le token depuis l’URL (#access_token=…)
 function parseImplicitToken() {
   if (window.location.hash.startsWith('#')) {
