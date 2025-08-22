@@ -24,8 +24,8 @@
   body{
     margin:0; font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Inter,Arial;
     color:var(--text); background: radial-gradient(1200px 800px at 15% -10%,#16223a 0%,transparent 60%),
-                        radial-gradient(1000px 700px at 85% -5%,#1a2d4b 0%,transparent 60%),
-                        radial-gradient(1200px 900px at 50% 110%,#111a2a 0%,transparent 60%), var(--bg);
+                       radial-gradient(1000px 700px at 85% -5%,#1a2d4b 0%,transparent 60%),
+                       radial-gradient(1200px 900px at 50% 110%,#111a2a 0%,transparent 60%), var(--bg);
     background-attachment: fixed;
     overflow-y: auto;
   }
@@ -113,7 +113,6 @@
   </header>
 
   <div class="grid">
-    <!-- État de compte -->
     <section class="card stack">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
         <div>
@@ -152,7 +151,6 @@
       </div>
     </section>
 
-    <!-- Zone recherche -->
     <section class="card stack" id="searchCard">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
         <div>
@@ -180,7 +178,6 @@
   </footer>
 </div>
 
-<!-- Panneau “clé générée” persistant -->
 <div id="stickyKey" class="sticky-key card hide">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
     <div style="font-weight:700">Votre clé Premium</div>
@@ -191,15 +188,14 @@
   <div class="muted" style="font-size:12px;margin-top:8px">Copiez cette clé et conservez-la en lieu sûr.</div>
 </div>
 
-<!-- Firebase (compat CDN) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
 
 <script>
 /** =========================
- *  TODO — PARAMÈTRES À RENSEIGNER
- *  ========================= */
+ * TODO — PARAMÈTRES À RENSEIGNER
+ * ========================= */
 const DISCORD = {
   CLIENT_ID: '1407471585866153995', // TODO: ton client_id
   GUILD_ID: '1406489247543984240',  // TODO: ID de ta guilde
@@ -208,7 +204,7 @@ const DISCORD = {
   // URL de redirection = cette même page (adapter si besoin)
   REDIRECT_URI:'https://nazapi.dreamweave.lol/',
   PREMIUM_ROLE_ID: '1406489247573086400', // Premium
-  VIP_ROLE_ID:     '1406489247564824669', // VIP
+  VIP_ROLE_ID:      '1406489247564824669', // VIP
 };
 
 const STRIPE = {
@@ -228,20 +224,20 @@ const FIREBASE_CFG = {
   // … autres champs facultatifs
 };
 
-// Chemin de licences (identique à ton bot) :contentReference[oaicite:0]{index=0}
+// Chemin de licences (identique à ton bot)
 const LICENSES_PATH = '/artifacts/' + ('default-app-id') + '/public/data/licenses';
 
-// Durée Premium par défaut (30 jours) comme dans ton code (2592000000 ms) :contentReference[oaicite:1]{index=1}
+// Durée Premium par défaut (30 jours) comme dans ton code (2592000000 ms)
 const THIRTY_DAYS_MS = 2592000000;
 
 /** =========================
- *  UTILITAIRES
- *  ========================= */
+ * UTILITAIRES
+ * ========================= */
 const $ = sel => document.querySelector(sel);
 const sleep = (ms)=> new Promise(r => setTimeout(r, ms));
 const toHexUpper = (buf) => [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();
 
-// Génère une clé identique à la logique Node: crypto.randomBytes(16).toString('hex').toUpperCase() :contentReference[oaicite:2]{index=2}
+// Génère une clé identique à la logique Node: crypto.randomBytes(16).toString('hex').toUpperCase()
 function generateLicenseKey() {
   const arr = new Uint8Array(16);
   crypto.getRandomValues(arr);
@@ -254,20 +250,19 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 
 /** =========================
- *  DISCORD OAUTH IMPLICIT GRANT
- *  ========================= */
+ * DISCORD OAUTH IMPLICIT GRANT
+ * ========================= */
 function loginDiscord() {
   const params = new URLSearchParams({
     client_id: DISCORD.CLIENT_ID,
-    // Le paramètre crucial : demander un "token" et non un "code"
     response_type: 'token',              
     redirect_uri: DISCORD.REDIRECT_URI,
     scope: DISCORD.SCOPES.join(' ')
   });
-  // Construisez l'URL de redirection avec les paramètres corrects
   window.location.href = `https://discord.com/oauth2/authorize?${params.toString()}`;
 }
-// Récupère le token depuis l’URL (#access_token=…)
+
+// Lit le token d'accès depuis l’URL (#access_token=…)
 function parseImplicitToken() {
   if (window.location.hash.startsWith('#')) {
     const h = new URLSearchParams(window.location.hash.slice(1));
@@ -275,7 +270,7 @@ function parseImplicitToken() {
       const token = h.get('access_token');
       const tokenType = h.get('token_type') || 'Bearer';
       const expires = Number(h.get('expires_in') || 0);
-      // Nettoie le hash
+      // Nettoie le hash de l'URL pour une meilleure expérience utilisateur
       history.replaceState({}, document.title, window.location.pathname + window.location.search);
       return { token, tokenType, expires };
     }
@@ -292,8 +287,8 @@ async function fetchDiscordJSON(token, path) {
 }
 
 /** =========================
- *  UI & FLUX
- *  ========================= */
+ * UI & FLUX
+ * ========================= */
 const userBadge = $('#userBadge');
 const loginBtn = $('#loginBtn');
 const logoutBtn = $('#logoutBtn');
@@ -370,19 +365,12 @@ function setLoggedInUI(hasPremium) {
   }
 }
 
-async function updateFromDiscord() {
+async function updateFromDiscord(token) {
   try{
-    const parsed = parseImplicitToken();
-    if (parsed) discordAuth = parsed;
-    if (!discordAuth) loadSession();
-
-    if (!discordAuth) { setLoggedOutUI(); return; }
-
     // Infos utilisateur
-    discordUser = await fetchDiscordJSON(discordAuth.token, '/users/@me');
-
+    discordUser = await fetchDiscordJSON(token, '/users/@me');
     // Roles du membre dans TA guilde (nécessite scope guilds.members.read)
-    let memberObj = await fetchDiscordJSON(discordAuth.token, `/users/@me/guilds/${DISCORD.GUILD_ID}/member`);
+    let memberObj = await fetchDiscordJSON(token, `/users/@me/guilds/${DISCORD.GUILD_ID}/member`);
     // normalise: memberObj.roles = array of role ids
     discordMember = { roles: (memberObj.roles||[]) };
 
@@ -391,7 +379,7 @@ async function updateFromDiscord() {
     const hasPremium = discordMember.roles.includes(DISCORD.PREMIUM_ROLE_ID) || discordMember.roles.includes(DISCORD.VIP_ROLE_ID);
     setLoggedInUI(hasPremium);
   }catch(e){
-    console.error(e);
+    console.error('Erreur lors de la mise à jour depuis Discord :', e);
     setLoggedOutUI();
   }
 }
@@ -404,8 +392,8 @@ function logout(){
 }
 
 /** =========================
- *  ACHAT STRIPE
- *  ========================= */
+ * ACHAT STRIPE
+ * ========================= */
 async function handleBuy() {
   // Option A : Payment Link direct (zéro backend)
   if (STRIPE.PAYMENT_LINK_URL) {
@@ -426,21 +414,21 @@ async function handleBuy() {
 }
 
 /** =========================
- *  CLÉS — Firestore (mêmes champs que ton bot)  :contentReference[oaicite:3]{index=3}
- *  ========================= */
+ * CLÉS — Firestore (mêmes champs que ton bot)
+ * ========================= */
 async function createLicenseForUser(name='NazAPI Premium - 30 jours', expiresIn=THIRTY_DAYS_MS, source='manual') {
   // construit l’objet identique à ton bot
   const keyData = {
-    key: generateLicenseKey(),                 // même format 32 HEX upper :contentReference[oaicite:4]{index=4}
+    key: generateLicenseKey(),              // même format 32 HEX upper
     name,
     expiresAt: Date.now() + expiresIn,
-    status: 'unused',                          // non activée par défaut (comme tes clés manuelles/stripe)
+    status: 'unused',                      // non activée par défaut (comme tes clés manuelles/stripe)
     createdAt: Date.now(),
     activatedBy: null,
-    source: source,                            // 'manual' | 'stripe' | 'request'
-    unusedExpiresAt: source === 'manual' ? Date.now() + 3600000 : null // 1h si manuel :contentReference[oaicite:5]{index=5}
+    source: source,                        // 'manual' | 'stripe' | 'request'
+    unusedExpiresAt: source === 'manual' ? Date.now() + 3600000 : null // 1h si manuel
   };
-  // Écriture Firestore (même collection que ton bot) :contentReference[oaicite:6]{index=6}
+  // Écriture Firestore (même collection que ton bot)
   await db.collection(LICENSES_PATH).add(keyData);
   return keyData;
 }
@@ -477,9 +465,9 @@ async function activateExistingKeyForUser(key) {
 }
 
 /** =========================
- *  RECHERCHE “SUR LE SITE”
- *  (démo : tu peux brancher ton endpoint actuel si besoin)
- *  ========================= */
+ * RECHERCHE “SUR LE SITE”
+ * (démo : tu peux brancher ton endpoint actuel si besoin)
+ * ========================= */
 async function runSearch(term){
   if (!term || term.trim().length < 2) { progress.textContent = 'Terme trop court.'; return; }
   results.innerHTML = ''; progress.textContent = 'Scan en cours…';
@@ -505,8 +493,8 @@ async function runSearch(term){
 }
 
 /** =========================
- *  EVENTS
- *  ========================= */
+ * EVENTS
+ * ========================= */
 $('#year').textContent = new Date().getFullYear();
 
 loginBtn.addEventListener('click', loginDiscord);
@@ -519,8 +507,8 @@ $('#activateKeyBtn').addEventListener('click', async ()=>{
   const input = $('#keyInput'); const key = (input.value||'').trim().toUpperCase();
   $('#activationMsg').classList.remove('ok-text','danger-text'); $('#activationMsg').textContent='';
   try{
-    if (key.length !== 32) throw new Error('Clé invalide (32 caractères requis).');
-    const activated = await activateExistingKeyForUser(key); // met à jour Firestore comme ton bot :contentReference[oaicite:7]{index=7}
+    if (!key || key.length !== 32) throw new Error('Clé invalide (32 caractères requis).');
+    const activated = await activateExistingKeyForUser(key);
     $('#activationMsg').classList.add('ok-text');
     $('#activationMsg').textContent = '✅ Clé activée. Ton rôle sera synchronisé côté serveur.';
   }catch(e){
@@ -536,14 +524,29 @@ $('#closeSticky').addEventListener('click', ()=> stickyKey.classList.add('hide')
 // Au chargement: regarder si un token Discord est revenu dans l’URL
 (async function init(){
   setLoggedOutUI();
-
   // Auth Firebase basique (anonyme) pour écrire si règles le permettent
   try { await auth.signInAnonymously(); } catch {}
+  
+  // Lit le token d'accès depuis l'URL (#)
+  const parsedToken = parseImplicitToken();
 
-  await updateFromDiscord();
+  if (parsedToken) {
+    discordAuth = parsedToken;
+  } else {
+    // Si pas de token dans l'URL, on essaie de charger la session précédente
+    loadSession();
+  }
+
+  // Si un token est présent (soit depuis l'URL, soit depuis la session)
+  if (discordAuth?.token) {
+    console.log('Jeton Discord détecté, tentative de connexion...');
+    await updateFromDiscord(discordAuth.token);
+  } else {
+    console.log('Aucun jeton Discord trouvé. Reste déconnecté.');
+  }
 
   // Astuce: si tu veux générer une clé “post-achat” manuellement (par ex. après un Payment Link),
-// tu peux ajouter ?grantKey=1 dans l’URL pour afficher un bouton de génération rapide.
+  // tu peux ajouter ?grantKey=1 dans l’URL pour afficher un bouton de génération rapide.
   const url = new URL(location.href);
   if (url.searchParams.get('grantKey') === '1') {
     // Génère une clé (source=manual) et l’affiche dans le panneau persistant
