@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>NazAPI • Recherche Premium</title>
+<meta name="color-scheme" content="dark light" />
+<style>
+  :root{
+    --bg: #0b0f1a;
+    --card: rgba(255,255,255,0.06);
+    --card-strong: rgba(255,255,255,0.12);
+    --text: #e8ecf1;
+    --muted: #9fb2c8;
+    --accent: #6de1ff;
+    --ok: #3ad29f;
+    --warn: #ffd166;
+    --danger:#ff6b6b;
+    --ring: rgba(109,225,255,.35);
+    --shadow: 0 10px 30px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.05);
+    --radius: 18px;
+  }
+  html,body{height:100%}
+  body{
+    margin:0; font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Inter,Arial;
+    color:var(--text); background: radial-gradient(1200px 800px at 15% -10%,#16223a 0%,transparent 60%),
+                       radial-gradient(1000px 700px at 85% -5%,#1a2d4b 0%,transparent 60%),
+                       radial-gradient(1200px 900px at 50% 110%,#111a2a 0%,transparent 60%), var(--bg);
+    background-attachment: fixed;
+    overflow-y: auto;
+  }
+  /* étoiles */
+  .stars, .stars2, .stars3{
+    position:fixed; inset:0; pointer-events:none; background-repeat:repeat; z-index:-1; opacity:.6;
+    background-image: radial-gradient(1px 1px at 20px 30px,#fff,transparent 50%),
+                      radial-gradient(1px 1px at 80px 120px,#fff,transparent 50%),
+                      radial-gradient(1px 1px at 200px 80px,#fff,transparent 50%),
+                      radial-gradient(1px 1px at 320px 40px,#fff,transparent 50%),
+                      radial-gradient(1px 1px at 440px 160px,#fff,transparent 50%);
+    animation: twinkle 16s linear infinite;
+  }
+  .stars2{ animation-duration:22s; opacity:.4; transform:scale(1.2) }
+  .stars3{ animation-duration:30s; opacity:.25; transform:scale(1.4) }
+  @keyframes twinkle { 0%{filter:brightness(.9)} 50%{filter:brightness(1.1)} 100%{filter:brightness(.9)} }
+
+  .wrap{ max-width:1080px; margin:auto; padding:32px 20px 80px; }
+  header{
+    display:flex; gap:16px; align-items:center; justify-content:space-between; margin-bottom:24px;
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .logo{
+    width:40px; height:40px; border-radius:12px; background:
+      radial-gradient(18px 14px at 14px 14px, #6de1ff 0%, #4cc2ff 35%, transparent 60%),
+      conic-gradient(from 220deg,#6de1ff, #7c6dff, #eb6cff, #6de1ff);
+    box-shadow: 0 0 30px rgba(109,225,255,.4), inset 0 0 0 2px rgba(255,255,255,.07);
+  }
+  h1{ font-size:20px; margin:0; letter-spacing:.3px }
+  .card{
+    background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    padding:18px 18px; border:1px solid rgba(255,255,255,.06);
+  }
+  .stack{ display:grid; gap:16px; }
+  .grid{ display:grid; gap:16px; grid-template-columns: 1.1fr .9fr; }
+  @media (max-width:900px){ .grid{ grid-template-columns:1fr } }
+  .muted{ color:var(--muted) }
+  .btn{
+    appearance:none; border:0; padding:12px 16px; border-radius:14px; font-weight:600; cursor:pointer;
+    background: linear-gradient(180deg, #1d2a42, #141c2b); color:#eaf7ff;
+    box-shadow: var(--shadow); transition: transform .05s ease, box-shadow .2s ease;
+  }
+  .btn:hover{ box-shadow: 0 14px 36px rgba(109,225,255,.25), inset 0 0 0 1px var(--ring) }
+  .btn:active{ transform: translateY(1px) }
+  .btn.secondary{ background: linear-gradient(180deg, #232b3b, #1a2230) }
+  .btn.ok{ background: linear-gradient(180deg, #1f3a34, #122722) }
+  .btn.danger{ background: linear-gradient(180deg, #3a2327, #2a1417) }
+  .toolbar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
+  .pill{ padding:6px 10px; background: var(--card-strong); border-radius:999px; font-size:12px; }
+  input[type="text"], input[type="search"]{
+    width:100%; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.07);
+    background: rgba(10,14,24,.6); color:var(--text); outline:none;
+  }
+  .footer{
+    opacity:.85; margin-top:28px; padding:16px; text-align:center; font-size:13px; color:var(--muted)
+  }
+  .danger-text{ color:var(--danger) }
+  .ok-text{ color:var(--ok) }
+  .divider{ height:1px; background: rgba(255,255,255,.08); margin:12px 0 }
+  .kbd{ background:rgba(255,255,255,.12); padding:2px 6px; border-radius:6px; font-size:12px }
+  .sticky-key{ position:fixed; right:20px; bottom:20px; max-width:520px; z-index:50 }
+  .hide{ display:none !important }
+  .role-chip{ font-size:12px; padding:6px 10px; border-radius:999px; background:rgba(255,25,255,.1); }
+  .code{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .contact-card {
+    background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 16px;
+    border-radius: var(--radius);
+    text-align: center;
+  }
+  .discord-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #5865F2;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: 12px;
+    transition: all 0.2s ease;
+  }
+  .discord-btn:hover {
+    background: #4752c4;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3);
+  }
+</style>
+</head>
+<body>
+<div class="stars"></div><div class="stars2"></div><div class="stars3"></div>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>NazAPI — Recherche</h1>
+        <div class="muted" style="font-size:13px">Recherche sur site • Accès réservé Premium</div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div id="userBadge" class="pill muted">Non connecté</div>
+      <button id="loginBtn" class="btn">Se connecter avec Discord</button>
+      <button id="logoutBtn" class="btn secondary hide">Se déconnecter</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="card stack">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <div>
+          <div style="font-weight:700">État de compte</div>
+          <div class="muted" style="font-size:13px">Connexion</div>
+        </div>
+        <div id="rolesChips" class="toolbar"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div id="accountState">
+        <div class="muted">Connecte-toi avec Discord pour vérifier ton accés au site.</div>
+      </div>
+
+      <div id="purchaseBlock" class="hide">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+          <div>
+            <div style="font-weight:700;font-size:16px">Premium NazAPI — 16,99 €</div>
+            <div class="muted" style="font-size:13px">30 jours • 300 recherches/jour • support prioritaire</div>
+          </div>
+          <div class="toolbar">
+            <button id="buyBtn" class="btn ok">Acheter maintenant</button>
+            <button id="haveKeyBtn" class="btn secondary">J’ai déjà une clé</button>
+          </div>
+        </div>
+        <div class="muted" style="font-size:12px">Paiement sécurisé via Stripe.</div>
+      </div>
+
+      <div id="activationBlock" class="hide">
+        <div style="display:flex;gap:10px;align-items:center">
+          <input id="keyInput" type="text" placeholder="VOTRE_CLÉ (32 caractères)" maxlength="32" />
+          <button id="activateKeyBtn" class="btn">Activer</button>
+        </div>
+        <div id="activationMsg" class="muted" style="font-size:13px;margin-top:8px"></div>
+      </div>
+      
+      <!-- New card for users who didn't receive their key -->
+      <div class="contact-card">
+        <div style="font-weight:700;margin-bottom:8px">Vous n'avez pas reçu votre clé?</div>
+        <div class="muted" style="font-size:13px">Contactez-nous sur Discord pour obtenir de l'aide</div>
+        <a href="https://discord.gg/your-server-link" target="_blank" class="discord-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02C2.44 8.78 1.71 12.23 2.04 15.64c0 .02.01.04.03.05c1.57 1.15 3.1 1.84 4.59 2.3c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08-.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.06-.04.09c.32.61.67 1.19 1.07 1.74c.03.01.06.02.09.01c1.5-.46 3.02-1.15 4.59-2.3c.02-.01.03-.03.03-.05c.4-3.9-.67-7.25-2.73-10.29c-.01-.02-.02-.02-.04-.02zm-10.56 8.18c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12zm6.59 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.83 2.12-1.89 2.12z"/>
+          </svg>
+          Rejoindre le Discord
+        </a>
+      </div>
+    </section>
+
+    <section class="card stack" id="searchCard">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <div>
+          <div style="font-weight:700">Recherche sur le site</div>
+          <div class="muted" style="font-size:13px">Réservé aux membres Premium connectés</div>
+        </div>
+        <div class="pill">Beta</div>
+      </div>
+
+      <div id="searchGate" class="muted">Accès verrouillé. Connecte-toi et assure-toi d’avoir le rôle <span class="code">Premium</span> ou <span class="code">VIP</span>.</div>
+
+      <div id="searchUI" class="hide">
+        <div style="display:flex; gap:10px; align-items:center">
+          <input id="q" type="search" placeholder="Terme à chercher…" />
+          <button id="doSearch" class="btn">Chercher</button>
+        </div>
+        <div id="progress" class="muted" style="margin-top:8px;font-size:13px"></div>
+        <div id="results" class="stack" style="margin-top:10px"></div>
+      </div>
+    </section>
+  </div>
+
+  <footer class="footer">
+    <div>© <span id="year"></span> NazAPI • <span class="muted">research services ✦</span></div>
+  </footer>
+</div>
+
+<div id="stickyKey" class="sticky-key card hide">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+    <div style="font-weight:700">Votre clé Premium</div>
+    <button id="closeSticky" class="btn secondary" style="padding:6px 10px">Fermer</button>
+  </div>
+  <div class="divider"></div>
+  <div class="code" id="stickyKeyValue" style="word-break:break-all;font-size:14px"></div>
+  <div class="muted" style="font-size:12px;margin-top:8px">Copiez cette clé et conservez-la en lieu sûr.</div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-functions-compat.js"></script>
+
+<script>
+/** =========================
+ * TODO — PARAMÈTRES À RENSEIGNER
+ * ========================= */
+const DISCORD = {
+  CLIENT_ID: '1407764995671986249',
+  GUILD_ID: '1406489247543984240',
+  SCOPES: ['identify', 'guilds.members.read'],
+  REDIRECT_URI:'https://nazapi.dreamweave.lol/',
+  PREMIUM_ROLE_ID: '1406489247573086400',
+  VIP_ROLE_ID: '1406489247564824669',
+};
+
+const STRIPE = {
+  PAYMENT_LINK_URL: 'https://buy.stripe.com/test_8x26ozdO6f9naYYaJpbZe00',
+  CREATE_SESSION_URL: '',
+  WEBHOOK_SECRET: 'your_webhook_secret_here' // Add your webhook secret for verification
+};
+
+const FIREBASE_CFG = {
+  apiKey: "AIzaSyBtVmI_0_9qC6Cj5lmYgbwVJlW8lH11Ouw",
+  authDomain: "nazapi-fc74e.firebaseapp.com",
+  projectId: "nazapi-fc74e",
+  storageBucket: "nazapi-fc74e.firebasestorage.app",
+  appId: "1:1011679210688:web:eeccc40063f83b91e3d125",
+};
+
+const LICENSES_PATH = '/artifacts/' + ('default-app-id') + '/public/data/licenses';
+const THIRTY_DAYS_MS = 2592000000;
+
+/** =========================
+ * UTILITAIRES
+ * ========================= */
+const $ = sel => document.querySelector(sel);
+const sleep = (ms)=> new Promise(r => setTimeout(r, ms));
+const toHexUpper = (buf) => [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();
+
+function generateLicenseKey() {
+  const arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  return toHexUpper(arr.buffer);
+}
+
+// Initialisation Firebase
+firebase.initializeApp(FIREBASE_CFG);
+const db = firebase.firestore();
+const auth = firebase.auth();
+const functions = firebase.functions();
+
+/** =========================
+ * STRIPE PAYMENT HANDLING
+ * ========================= */
+function setupStripePaymentListeners() {
+  // Listen for successful payment redirects
+  const urlParams = new URLSearchParams(window.location.search);
+  const paymentStatus = urlParams.get('payment_status');
+  const sessionId = urlParams.get('session_id');
+  
+  if (paymentStatus === 'success' && sessionId) {
+    // Show loading message
+    $('#activationMsg').classList.remove('ok-text','danger-text');
+    $('#activationMsg').textContent = 'Traitement de votre paiement...';
+    
+    // Check for license key creation
+    checkPaymentCompletion(sessionId);
+  }
+}
+
+async function checkPaymentCompletion(sessionId) {
+  try {
+    // You would typically verify the payment with your backend
+    // For now, we'll simulate a successful payment processing
+    await sleep(2000); // Simulate processing time
+    
+    // Create a license for the user
+    const keyData = await createLicenseForUser(
+      'NazAPI Premium - 30 jours', 
+      THIRTY_DAYS_MS, 
+      'stripe'
+    );
+    
+    // Show the license key to the user
+    stickyKeyValue.textContent = keyData.key;
+    stickyKey.classList.remove('hide');
+    
+    // Update activation message
+    $('#activationMsg').classList.add('ok-text');
+    $('#activationMsg').textContent = '✅ Paiement réussi! Votre clé a été générée.';
+    
+    // Clear URL parameters
+    window.history.replaceState({}, document.title, window.location.pathname);
+    
+  } catch (error) {
+    console.error('Payment processing error:', error);
+    $('#activationMsg').classList.add('danger-text');
+    $('#activationMsg').textContent = '❌ Erreur lors du traitement du paiement. Contactez-nous.';
+  }
+}
+
+/** =========================
+ * DISCORD OAUTH IMPLICIT GRANT
+ * ========================= */
+function loginDiscord() {
+  const params = new URLSearchParams({
+    client_id: DISCORD.CLIENT_ID,
+    response_type: 'token',
+    redirect_uri: DISCORD.REDIRECT_URI,
+    scope: DISCORD.SCOPES.join(' ')
+  });
+  window.location.href = `https://discord.com/oauth2/authorize?${params.toString()}`;
+}
+
+function parseImplicitToken() {
+  if (window.location.hash.startsWith('#')) {
+    const h = new URLSearchParams(window.location.hash.slice(1));
+    if (h.get('access_token')) {
+      const token = h.get('access_token');
+      const tokenType = h.get('token_type') || 'Bearer';
+      const expires = Number(h.get('expires_in') || 0);
+      history.replaceState({}, document.title, window.location.pathname + window.location.search);
+      return { token, tokenType, expires };
+    }
+  }
+  return null;
+}
+
+async function fetchDiscordJSON(token, path) {
+  const r = await fetch(`https://discord.com/api${path}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!r.ok) throw new Error('Discord API error: ' + r.status);
+  return r.json();
+}
+
+/** =========================
+ * UI & FLUX
+ * ========================= */
+const userBadge = $('#userBadge');
+const loginBtn = $('#loginBtn');
+const logoutBtn = $('#logoutBtn');
+const rolesChips = $('#rolesChips');
+const accountState = $('#accountState');
+const purchaseBlock = $('#purchaseBlock');
+const activationBlock = $('#activationBlock');
+const searchGate = $('#searchGate');
+const searchUI = $('#searchUI');
+const results = $('#results');
+const progress = $('#progress');
+const stickyKey = $('#stickyKey');
+const stickyKeyValue = $('#stickyKeyValue');
+
+let discordAuth = null;
+let discordUser = null;
+let discordMember = null;
+
+function saveSession() {
+  sessionStorage.setItem('nazapi_discord_auth', JSON.stringify(discordAuth || null));
+  sessionStorage.setItem('nazapi_discord_user', JSON.stringify(discordUser || null));
+  sessionStorage.setItem('nazapi_discord_member', JSON.stringify(discordMember || null));
+}
+function loadSession() {
+  try{
+    discordAuth  = JSON.parse(sessionStorage.getItem('nazapi_discord_auth')||'null');
+    discordUser  = JSON.parse(sessionStorage.getItem('nazapi_discord_user')||'null');
+    discordMember= JSON.parse(sessionStorage.getItem('nazapi_discord_member')||'null');
+  }catch{}
+}
+
+function setLoggedOutUI() {
+  userBadge.textContent = 'Non connecté';
+  rolesChips.innerHTML = '';
+  accountState.innerHTML = `<div class="muted">Connecte-toi avec Discord pour vérifier tes rôles sur le serveur.</div>`;
+  purchaseBlock.classList.add('hide');
+  activationBlock.classList.add('hide');
+  searchGate.classList.remove('hide');
+  searchUI.classList.add('hide');
+  logoutBtn.classList.add('hide');
+  loginBtn.classList.remove('hide');
+}
+
+function showRolesChips(member){
+  rolesChips.innerHTML = '';
+  if (!member || !Array.isArray(member.roles)) return;
+  member.roles.forEach(id=>{
+    const span = document.createElement('span');
+    span.className='role-chip';
+    span.textContent = (id===DISCORD.PREMIUM_ROLE_ID?'Premium':(id===DISCORD.VIP_ROLE_ID?'VIP':('Rôle '+id)));
+    rolesChips.appendChild(span);
+  });
+}
+
+function setLoggedInUI(hasPremium) {
+  userBadge.textContent = discordUser ? `${discordUser.username}#${discordUser.discriminator || '0'}` : 'Connecté';
+  showRolesChips({roles: discordMember?.roles || []});
+  logoutBtn.classList.remove('hide');
+  loginBtn.classList.add('hide');
+
+  if (hasPremium) {
+    accountState.innerHTML = `<div class="ok-text">Accès Premium/VIP validé ✔</div><div class="muted" style="font-size:13px">Tu peux utiliser la recherche.</div>`;
+    purchaseBlock.classList.add('hide');
+    activationBlock.classList.remove('hide');
+    searchGate.classList.add('hide');
+    searchUI.classList.remove('hide');
+  } else {
+    accountState.innerHTML = `<div class="danger-text">Accès Premium requis</div><div class="muted" style="font-size:13px">Achète Premium (16,99 €) ou active une clé existante.</div>`;
+    purchaseBlock.classList.remove('hide');
+    activationBlock.classList.remove('hide');
+    searchGate.classList.remove('hide');
+    searchUI.classList.add('hide');
+  }
+}
+
+async function updateFromDiscord(token) {
+  try{
+    discordUser = await fetchDiscordJSON(token, '/users/@me');
+    let memberObj = await fetchDiscordJSON(token, `/users/@me/guilds/${DISCORD.GUILD_ID}/member`);
+    discordMember = { roles: (memberObj.roles||[]) };
+
+    saveSession();
+
+    const hasPremium = discordMember.roles.includes(DISCORD.PREMIUM_ROLE_ID) || discordMember.roles.includes(DISCORD.VIP_ROLE_ID);
+    setLoggedInUI(hasPremium);
+  }catch(e){
+    console.error('Erreur lors de la mise à jour depuis Discord :', e);
+    setLoggedOutUI();
+  }
+}
+
+function logout(){
+  discordAuth = discordUser = discordMember = null;
+  saveSession();
+  setLoggedOutUI();
+}
+
+async function handleBuy() {
+  if (STRIPE.PAYMENT_LINK_URL) {
+    // Add user ID to the payment link for tracking
+    const userId = discordUser ? discordUser.id : 'anonymous';
+    const paymentUrl = new URL(STRIPE.PAYMENT_LINK_URL);
+    paymentUrl.searchParams.append('client_reference_id', userId);
+    paymentUrl.searchParams.append('prefilled_email', discordUser ? discordUser.email : '');
+    
+    window.location.href = paymentUrl.toString();
+    return;
+  }
+  if (STRIPE.CREATE_SESSION_URL) {
+    try{
+      const r = await fetch(STRIPE.CREATE_SESSION_URL, { method:'POST' });
+      const data = await r.json();
+      if (data.url) { window.location.href = data.url; return; }
+      alert('Impossible d’ouvrir la page de paiement.');
+    }catch(e){ alert('Erreur de paiement'); }
+    return;
+  }
+  alert('Stripe n’est pas configuré (ajoute PAYMENT_LINK_URL ou CREATE_SESSION_URL).');
+}
+
+async function createLicenseForUser(name='NazAPI Premium - 30 jours', expiresIn=THIRTY_DAYS_MS, source='manual') {
+  const keyData = {
+    key: generateLicenseKey(),
+    name,
+    expiresAt: Date.now() + expiresIn,
+    status: 'unused',
+    createdAt: Date.now(),
+    activatedBy: null,
+    source: source,
+    unusedExpiresAt: source === 'manual' ? Date.now() + 3600000 : null
+  };
+  await db.collection(LICENSES_PATH).add(keyData);
+  return keyData;
+}
+
+async function activateExistingKeyForUser(key) {
+  if (!discordUser) throw new Error('Non connecté');
+
+  const snap = await db.collection(LICENSES_PATH).where('key','==',key).get();
+  if (snap.empty) throw new Error('Clé invalide');
+
+  const docRef = snap.docs[0].ref;
+  const data = snap.docs[0].data();
+
+  if (data.status !== 'unused') throw new Error('Clé déjà activée ou expirée');
+  if (data.unusedExpiresAt && data.unusedExpiresAt <= Date.now()) {
+    await docRef.update({ status: 'expired' });
+    throw new Error('Clé expirée (non utilisée à temps)');
+  }
+  const q2 = await db.collection(LICENSES_PATH).where('activatedBy','==', discordUser.id).where('status','==','active').get();
+  if (!q2.empty) throw new Error('Vous avez déjà une licence active');
+
+  await docRef.update({
+    status:'active',
+    activatedBy: discordUser.id,
+    activatedAt: Date.now()
+  });
+  return { ...data, status:'active', activatedBy: discordUser.id };
+}
+
+/** =========================
+ * LA NOUVELLE FONCTION DE RECHERCHE QUI APPELLE LA CLOUD FUNCTION
+ * ========================= */
+async function runSearch(term){
+  if (!term || term.trim().length < 2) { progress.textContent = 'Terme trop court.'; return; }
+  results.innerHTML = ''; progress.textContent = 'Recherche en cours...';
+
+  try {
+    // Appel de la Cloud Function 'searchFiles'
+    const searchFunction = functions.httpsCallable('searchFiles');
+    const response = await searchFunction({ query: term });
+    const found = response.data.results;
+
+    if (found.length === 0) {
+      progress.textContent = `Aucun résultat trouvé pour "${term}".`;
+      return;
+    }
+
+    progress.textContent = `Résultats : ${found.length} trouvé(s).`;
+    for (const r of found) {
+      const el = document.createElement('div');
+      el.className='card';
+      el.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:700">📄 ${r.nom}</div>
+            <div class="muted" style="font-size:12px">${r.chemin}</div>
+          </div>
+          <a href="${r.downloadUrl}" download="${r.nom}" class="btn">
+            Télécharger
+          </a>
+        </div>
+        <div class="divider"></div>
+        <pre class="code" style="white-space:pre-wrap;margin:0">${r.ligne}</pre>
+      `;
+      results.appendChild(el);
+    }
+  } catch (error) {
+    console.error('Erreur lors de l’appel de la fonction de recherche :', error);
+    progress.textContent = `Erreur : ${error.message}`;
+  }
+}
+
+/** =========================
+ * EVENTS
+ * ========================= */
+$('#year').textContent = new Date().getFullYear();
+
+loginBtn.addEventListener('click', loginDiscord);
+logoutBtn.addEventListener('click', logout);
+
+$('#buyBtn').addEventListener('click', handleBuy);
+$('#haveKeyBtn').addEventListener('click', ()=> activationBlock.scrollIntoView({behavior:'smooth',block:'center'}));
+
+$('#activateKeyBtn').addEventListener('click', async ()=>{
+  const input = $('#keyInput'); const key = (input.value||'').trim().toUpperCase();
+  $('#activationMsg').classList.remove('ok-text','danger-text'); $('#activationMsg').textContent='';
+  try{
+    if (!key || key.length !== 32) throw new Error('Clé invalide (32 caractères requis).');
+    const activated = await activateExistingKeyForUser(key);
+    $('#activationMsg').classList.add('ok-text');
+    $('#activationMsg').textContent = '✅ Clé activée. Ton rôle sera synchronisé côté serveur.';
+  }catch(e){
+    $('#activationMsg').classList.add('danger-text');
+    $('#activationMsg').textContent = '❌ ' + e.message;
+  }
+});
+
+$('#doSearch').addEventListener('click', ()=> runSearch($('#q').value));
+
+$('#closeSticky').addEventListener('click', ()=> stickyKey.classList.add('hide'));
+
+(async function init(){
+  setLoggedOutUI();
+  try { await auth.signInAnonymously(); } catch {}
+  
+  const parsedToken = parseImplicitToken();
+
+  if (parsedToken) {
+    discordAuth = parsedToken;
+  } else {
+    loadSession();
+  }
+
+  if (discordAuth?.token) {
+    console.log('Jeton Discord détecté, tentative de connexion...');
+    await updateFromDiscord(discordAuth.token);
+  } else {
+    console.log('Aucun jeton Discord trouvé. Reste déconnecté.');
+  }
+
+  // Set up Stripe payment listeners
+  setupStripePaymentListeners();
+
+  const url = new URL(location.href);
+  if (url.searchParams.get('grantKey') === '1') {
+    try{
+      const keyObj = await createLicenseForUser('NazAPI Premium - 30 jours', THIRTY_DAYS_MS, 'manual');
+      stickyKeyValue.textContent = keyObj.key;
+      stickyKey.classList.remove('hide');
+    }catch(e){ console.error(e); }
+  }
+})();
+</script>
+</body>
+</html>
