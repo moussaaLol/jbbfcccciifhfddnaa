@@ -91,6 +91,8 @@
   .hide{ display:none !important }
   .role-chip{ font-size:12px; padding:6px 10px; border-radius:999px; background:rgba(255,25,255,.1); }
   .code{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  
+  /* New styles for the contact card */
   .contact-card {
     background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
     border: 1px solid rgba(255,255,255,0.1);
@@ -116,10 +118,58 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3);
   }
+  
+  /* Loading screen styles */
+  .loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+  }
+  .loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(109, 225, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--accent);
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 20px;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .loading-text {
+    font-size: 18px;
+    color: var(--text);
+    text-align: center;
+  }
+  .loading-dots:after {
+    content: '';
+    animation: dots 1.5s infinite;
+  }
+  @keyframes dots {
+    0%, 20% { content: '.'; }
+    40% { content: '..'; }
+    60%, 100% { content: '...'; }
+  }
 </style>
 </head>
 <body>
 <div class="stars"></div><div class="stars2"></div><div class="stars3"></div>
+
+<!-- Loading Screen -->
+<div id="loadingScreen" class="loading-screen">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Chargement de NazAPI<span class="loading-dots"></span></div>
+</div>
 
 <div class="wrap">
   <header>
@@ -175,7 +225,7 @@
         <div id="activationMsg" class="muted" style="font-size:13px;margin-top:8px"></div>
       </div>
       
-      <!-- New card for users who didn't receive their key -->
+      <!-- New contact card for users who didn't receive their key -->
       <div class="contact-card">
         <div style="font-weight:700;margin-bottom:8px">Vous n'avez pas reçu votre clé?</div>
         <div class="muted" style="font-size:13px">Contactez-nous sur Discord pour obtenir de l'aide</div>
@@ -245,7 +295,7 @@ const DISCORD = {
 const STRIPE = {
   PAYMENT_LINK_URL: 'https://buy.stripe.com/test_8x26ozdO6f9naYYaJpbZe00',
   CREATE_SESSION_URL: '',
-  WEBHOOK_SECRET: 'whsec_J2jJS3YJLGsh1tISTI1B3VMFvTSBb6bu' // Add your webhook secret for verification
+  WEBHOOK_SECRET: 'whsec_J2jJS3YJLGsh1tISTI1B3VMFvTSBb6b' // Add your webhook secret for verification
 };
 
 const FIREBASE_CFG = {
@@ -299,6 +349,9 @@ function setupStripePaymentListeners() {
 
 async function checkPaymentCompletion(sessionId) {
   try {
+    // Show loading screen
+    showLoadingScreen('Traitement de votre paiement...');
+    
     // You would typically verify the payment with your backend
     // For now, we'll simulate a successful payment processing
     await sleep(2000); // Simulate processing time
@@ -321,11 +374,40 @@ async function checkPaymentCompletion(sessionId) {
     // Clear URL parameters
     window.history.replaceState({}, document.title, window.location.pathname);
     
+    // Hide loading screen
+    hideLoadingScreen();
+    
   } catch (error) {
     console.error('Payment processing error:', error);
     $('#activationMsg').classList.add('danger-text');
     $('#activationMsg').textContent = '❌ Erreur lors du traitement du paiement. Contactez-nous.';
+    hideLoadingScreen();
   }
+}
+
+/** =========================
+ * LOADING SCREEN FUNCTIONS
+ * ========================= */
+function showLoadingScreen(message = 'Chargement...') {
+  const loadingScreen = $('#loadingScreen');
+  const loadingText = loadingScreen.querySelector('.loading-text');
+  
+  if (message) {
+    loadingText.innerHTML = message + '<span class="loading-dots"></span>';
+  }
+  
+  loadingScreen.style.display = 'flex';
+  setTimeout(() => {
+    loadingScreen.style.opacity = '1';
+  }, 10);
+}
+
+function hideLoadingScreen() {
+  const loadingScreen = $('#loadingScreen');
+  loadingScreen.style.opacity = '0';
+  setTimeout(() => {
+    loadingScreen.style.display = 'none';
+  }, 500);
 }
 
 /** =========================
@@ -443,6 +525,7 @@ function setLoggedInUI(hasPremium) {
 
 async function updateFromDiscord(token) {
   try{
+    showLoadingScreen('Connexion à Discord...');
     discordUser = await fetchDiscordJSON(token, '/users/@me');
     let memberObj = await fetchDiscordJSON(token, `/users/@me/guilds/${DISCORD.GUILD_ID}/member`);
     discordMember = { roles: (memberObj.roles||[]) };
@@ -451,9 +534,11 @@ async function updateFromDiscord(token) {
 
     const hasPremium = discordMember.roles.includes(DISCORD.PREMIUM_ROLE_ID) || discordMember.roles.includes(DISCORD.VIP_ROLE_ID);
     setLoggedInUI(hasPremium);
+    hideLoadingScreen();
   }catch(e){
     console.error('Erreur lors de la mise à jour depuis Discord :', e);
     setLoggedOutUI();
+    hideLoadingScreen();
   }
 }
 
@@ -465,24 +550,41 @@ function logout(){
 
 async function handleBuy() {
   if (STRIPE.PAYMENT_LINK_URL) {
+    // Show loading screen
+    showLoadingScreen('Redirection vers Stripe...');
+    
     // Add user ID to the payment link for tracking
     const userId = discordUser ? discordUser.id : 'anonymous';
     const paymentUrl = new URL(STRIPE.PAYMENT_LINK_URL);
     paymentUrl.searchParams.append('client_reference_id', userId);
     paymentUrl.searchParams.append('prefilled_email', discordUser ? discordUser.email : '');
     
-    window.location.href = paymentUrl.toString();
+    // Small delay to show the loading screen
+    setTimeout(() => {
+      window.location.href = paymentUrl.toString();
+    }, 1000);
     return;
   }
   if (STRIPE.CREATE_SESSION_URL) {
     try{
+      showLoadingScreen('Création de la session de paiement...');
       const r = await fetch(STRIPE.CREATE_SESSION_URL, { method:'POST' });
       const data = await r.json();
-      if (data.url) { window.location.href = data.url; return; }
+      if (data.url) { 
+        setTimeout(() => {
+          window.location.href = data.url;
+        }, 1000);
+        return; 
+      }
+      hideLoadingScreen();
       alert('Impossible d’ouvrir la page de paiement.');
-    }catch(e){ alert('Erreur de paiement'); }
+    }catch(e){ 
+      hideLoadingScreen();
+      alert('Erreur de paiement'); 
+    }
     return;
   }
+  hideLoadingScreen();
   alert('Stripe n’est pas configuré (ajoute PAYMENT_LINK_URL ou CREATE_SESSION_URL).');
 }
 
@@ -585,12 +687,15 @@ $('#activateKeyBtn').addEventListener('click', async ()=>{
   $('#activationMsg').classList.remove('ok-text','danger-text'); $('#activationMsg').textContent='';
   try{
     if (!key || key.length !== 32) throw new Error('Clé invalide (32 caractères requis).');
+    showLoadingScreen('Activation de votre clé...');
     const activated = await activateExistingKeyForUser(key);
     $('#activationMsg').classList.add('ok-text');
     $('#activationMsg').textContent = '✅ Clé activée. Ton rôle sera synchronisé côté serveur.';
+    hideLoadingScreen();
   }catch(e){
     $('#activationMsg').classList.add('danger-text');
     $('#activationMsg').textContent = '❌ ' + e.message;
+    hideLoadingScreen();
   }
 });
 
@@ -599,6 +704,9 @@ $('#doSearch').addEventListener('click', ()=> runSearch($('#q').value));
 $('#closeSticky').addEventListener('click', ()=> stickyKey.classList.add('hide'));
 
 (async function init(){
+  // Show initial loading screen
+  showLoadingScreen();
+  
   setLoggedOutUI();
   try { await auth.signInAnonymously(); } catch {}
   
@@ -615,6 +723,7 @@ $('#closeSticky').addEventListener('click', ()=> stickyKey.classList.add('hide')
     await updateFromDiscord(discordAuth.token);
   } else {
     console.log('Aucun jeton Discord trouvé. Reste déconnecté.');
+    hideLoadingScreen();
   }
 
   // Set up Stripe payment listeners
