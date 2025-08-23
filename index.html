@@ -76,9 +76,14 @@
   .btn.danger{ background: linear-gradient(180deg, #3a2327, #2a1417) }
   .toolbar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
   .pill{ padding:6px 10px; background: var(--card-strong); border-radius:999px; font-size:12px; }
-  input[type="text"], input[type="search"]{
+  input[type="text"], input[type="search"], textarea {
     width:100%; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.07);
     background: rgba(10,14,24,.6); color:var(--text); outline:none;
+    font-family: inherit;
+  }
+  textarea {
+    min-height: 100px;
+    resize: vertical;
   }
   .footer{
     opacity:.85; margin-top:28px; padding:16px; text-align:center; font-size:13px; color:var(--muted)
@@ -160,6 +165,108 @@
     40% { content: '..'; }
     60%, 100% { content: '...'; }
   }
+  
+  /* Role assignment status */
+  .role-status {
+    padding: 10px;
+    border-radius: 12px;
+    margin-top: 12px;
+    font-size: 14px;
+    text-align: center;
+  }
+  .role-status.updating {
+    background: rgba(255, 209, 102, 0.1);
+    color: var(--warn);
+  }
+  .role-status.success {
+    background: rgba(58, 210, 159, 0.1);
+    color: var(--ok);
+  }
+  .role-status.error {
+    background: rgba(255, 107, 107, 0.1);
+    color: var(--danger);
+  }
+  
+  /* Vouch system styles */
+  .vouch-section {
+    margin-top: 30px;
+  }
+  .vouch-form {
+    background: var(--card);
+    padding: 20px;
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+  }
+  .vouch-list {
+    display: grid;
+    gap: 16px;
+  }
+  .vouch-item {
+    background: var(--card);
+    padding: 16px;
+    border-radius: var(--radius);
+    position: relative;
+  }
+  .vouch-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .vouch-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .vouch-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #6de1ff, #7c6dff);
+  }
+  .vouch-name {
+    font-weight: 600;
+  }
+  .vouch-date {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .vouch-content {
+    margin: 10px 0;
+    line-height: 1.5;
+  }
+  .vouch-delete {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(255, 107, 107, 0.2);
+    border: none;
+    border-radius: 6px;
+    padding: 4px 8px;
+    color: var(--danger);
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .vouch-delete:hover {
+    background: rgba(255, 107, 107, 0.3);
+  }
+  .no-vouches {
+    text-align: center;
+    padding: 30px;
+    color: var(--muted);
+  }
+  .char-count {
+    text-align: right;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 5px;
+  }
+  .char-count.warning {
+    color: var(--warn);
+  }
+  .char-count.error {
+    color: var(--danger);
+  }
 </style>
 </head>
 <body>
@@ -223,6 +330,7 @@
           <button id="activateKeyBtn" class="btn">Activer</button>
         </div>
         <div id="activationMsg" class="muted" style="font-size:13px;margin-top:8px"></div>
+        <div id="roleAssignmentStatus" class="role-status hide"></div>
       </div>
       
       <!-- New contact card for users who didn't receive their key -->
@@ -260,6 +368,22 @@
     </section>
   </div>
 
+  <!-- Vouch Section -->
+  <section id="vouchSection" class="vouch-section hide">
+    <h2 style="margin-bottom: 20px;">Témoignages de la communauté</h2>
+    
+    <div id="vouchForm" class="vouch-form hide">
+      <h3 style="margin-bottom: 15px;">Laissez votre témoignage</h3>
+      <textarea id="vouchText" placeholder="Partagez votre expérience avec NazAPI..." maxlength="500"></textarea>
+      <div id="vouchCharCount" class="char-count">0/500</div>
+      <button id="submitVouch" class="btn" style="margin-top: 15px;">Publier le témoignage</button>
+    </div>
+    
+    <div id="vouchList" class="vouch-list">
+      <div class="no-vouches">Aucun témoignage pour le moment.</div>
+    </div>
+  </section>
+
   <footer class="footer">
     <div>© <span id="year"></span> NazAPI • <span class="muted">research services ✦</span></div>
   </footer>
@@ -290,12 +414,13 @@ const DISCORD = {
   REDIRECT_URI:'https://nazapi.dreamweave.lol/',
   PREMIUM_ROLE_ID: '1406489247573086400',
   VIP_ROLE_ID: '1406489247564824669',
+  MOD_ROLE_ID: '1406489247564824670' // Add your mod role ID here
 };
 
 const STRIPE = {
   PAYMENT_LINK_URL: 'https://buy.stripe.com/test_8x26ozdO6f9naYYaJpbZe00',
   CREATE_SESSION_URL: '',
-  WEBHOOK_SECRET: 'whsec_J2jJS3YJLGsh1tISTI1B3VMFvTSBb6b' // Add your webhook secret for verification
+  WEBHOOK_SECRET: 'your_webhook_secret_here' // Add your webhook secret for verification
 };
 
 const FIREBASE_CFG = {
@@ -307,6 +432,7 @@ const FIREBASE_CFG = {
 };
 
 const LICENSES_PATH = '/artifacts/' + ('default-app-id') + '/public/data/licenses';
+const VOUCHES_PATH = 'vouches';
 const THIRTY_DAYS_MS = 2592000000;
 
 /** =========================
@@ -322,11 +448,164 @@ function generateLicenseKey() {
   return toHexUpper(arr.buffer);
 }
 
+// Format date to readable format
+function formatDate(timestamp) {
+  if (!timestamp) return '';
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date);
+}
+
 // Initialisation Firebase
 firebase.initializeApp(FIREBASE_CFG);
 const db = firebase.firestore();
 const auth = firebase.auth();
 const functions = firebase.functions();
+
+/** =========================
+ * VOUCH SYSTEM
+ * ========================= */
+async function loadVouches() {
+  try {
+    const snapshot = await db.collection(VOUCHES_PATH)
+      .orderBy('createdAt', 'desc')
+      .limit(50)
+      .get();
+    
+    const vouchesContainer = $('#vouchList');
+    vouchesContainer.innerHTML = '';
+    
+    if (snapshot.empty) {
+      vouchesContainer.innerHTML = '<div class="no-vouches">Aucun témoignage pour le moment.</div>';
+      return;
+    }
+    
+    snapshot.forEach(doc => {
+      const vouch = doc.data();
+      const vouchElement = createVouchElement(doc.id, vouch);
+      vouchesContainer.appendChild(vouchElement);
+    });
+  } catch (error) {
+    console.error('Error loading vouches:', error);
+    $('#vouchList').innerHTML = '<div class="no-vouches">Erreur lors du chargement des témoignages.</div>';
+  }
+}
+
+function createVouchElement(id, vouch) {
+  const div = document.createElement('div');
+  div.className = 'vouch-item';
+  div.innerHTML = `
+    <div class="vouch-header">
+      <div class="vouch-user">
+        <div class="vouch-avatar"></div>
+        <div>
+          <div class="vouch-name">${vouch.userName || 'Utilisateur'}</div>
+          <div class="vouch-date">${formatDate(vouch.createdAt)}</div>
+        </div>
+      </div>
+    </div>
+    <div class="vouch-content">${vouch.text}</div>
+  `;
+  
+  // Add delete button for mods
+  if (hasModPermissions()) {
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'vouch-delete';
+    deleteBtn.innerHTML = '×';
+    deleteBtn.onclick = () => deleteVouch(id);
+    div.appendChild(deleteBtn);
+  }
+  
+  return div;
+}
+
+async function submitVouch() {
+  const text = $('#vouchText').value.trim();
+  if (!text) {
+    alert('Veuillez écrire un témoignage.');
+    return;
+  }
+  
+  if (!discordUser) {
+    alert('Vous devez être connecté pour poster un témoignage.');
+    return;
+  }
+  
+  try {
+    $('#submitVouch').disabled = true;
+    $('#submitVouch').textContent = 'Publication...';
+    
+    const vouchData = {
+      text: text,
+      userId: discordUser.id,
+      userName: `${discordUser.username}#${discordUser.discriminator || '0'}`,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      userRoles: discordMember?.roles || []
+    };
+    
+    await db.collection(VOUCHES_PATH).add(vouchData);
+    
+    $('#vouchText').value = '';
+    $('#vouchCharCount').textContent = '0/500';
+    $('#vouchCharCount').className = 'char-count';
+    
+    await loadVouches();
+    
+    $('#submitVouch').disabled = false;
+    $('#submitVouch').textContent = 'Publier le témoignage';
+    
+  } catch (error) {
+    console.error('Error submitting vouch:', error);
+    alert('Erreur lors de la publication du témoignage.');
+    $('#submitVouch').disabled = false;
+    $('#submitVouch').textContent = 'Publier le témoignage';
+  }
+}
+
+async function deleteVouch(vouchId) {
+  if (!confirm('Êtes-vous sûr de vouloir supprimer ce témoignage?')) return;
+  
+  try {
+    await db.collection(VOUCHES_PATH).doc(vouchId).delete();
+    await loadVouches();
+  } catch (error) {
+    console.error('Error deleting vouch:', error);
+    alert('Erreur lors de la suppression du témoignage.');
+  }
+}
+
+function hasModPermissions() {
+  return discordMember && discordMember.roles && discordMember.roles.includes(DISCORD.MOD_ROLE_ID);
+}
+
+function hasPremiumAccess() {
+  return discordMember && discordMember.roles && 
+        (discordMember.roles.includes(DISCORD.PREMIUM_ROLE_ID) || 
+         discordMember.roles.includes(DISCORD.VIP_ROLE_ID));
+}
+
+function setupVouchCharacterCounter() {
+  const textarea = $('#vouchText');
+  const counter = $('#vouchCharCount');
+  
+  textarea.addEventListener('input', () => {
+    const length = textarea.value.length;
+    counter.textContent = `${length}/500`;
+    
+    if (length > 450) {
+      counter.className = 'char-count warning';
+    } else if (length > 490) {
+      counter.className = 'char-count error';
+    } else {
+      counter.className = 'char-count';
+    }
+  });
+}
 
 /** =========================
  * STRIPE PAYMENT HANDLING
@@ -411,6 +690,48 @@ function hideLoadingScreen() {
 }
 
 /** =========================
+ * DISCORD ROLE ASSIGNMENT
+ * ========================= */
+async function assignDiscordRole(userId) {
+  try {
+    // Show role assignment status
+    const statusElement = $('#roleAssignmentStatus');
+    statusElement.classList.remove('hide', 'success', 'error');
+    statusElement.classList.add('updating');
+    statusElement.textContent = 'Attribution du rôle Discord en cours...';
+    
+    // Call Cloud Function to assign Discord role
+    const assignRoleFunction = functions.httpsCallable('assignDiscordRole');
+    const result = await assignRoleFunction({ 
+      userId: userId,
+      roleId: DISCORD.PREMIUM_ROLE_ID
+    });
+    
+    if (result.data.success) {
+      statusElement.classList.remove('updating');
+      statusElement.classList.add('success');
+      statusElement.textContent = '✅ Rôle Discord attribué avec succès!';
+      
+      // Refresh user data to show new role
+      if (discordAuth?.token) {
+        await updateFromDiscord(discordAuth.token);
+      }
+      
+      return true;
+    } else {
+      throw new Error(result.data.error || 'Erreur inconnue lors de l\'attribution du rôle');
+    }
+  } catch (error) {
+    console.error('Error assigning Discord role:', error);
+    const statusElement = $('#roleAssignmentStatus');
+    statusElement.classList.remove('updating');
+    statusElement.classList.add('error');
+    statusElement.textContent = '❌ Erreur lors de l\'attribution du rôle Discord. Contactez-nous.';
+    return false;
+  }
+}
+
+/** =========================
  * DISCORD OAUTH IMPLICIT GRANT
  * ========================= */
 function loginDiscord() {
@@ -489,6 +810,8 @@ function setLoggedOutUI() {
   searchUI.classList.add('hide');
   logoutBtn.classList.add('hide');
   loginBtn.classList.remove('hide');
+  $('#vouchSection').classList.add('hide');
+  $('#vouchForm').classList.add('hide');
 }
 
 function showRolesChips(member){
@@ -497,7 +820,7 @@ function showRolesChips(member){
   member.roles.forEach(id=>{
     const span = document.createElement('span');
     span.className='role-chip';
-    span.textContent = (id===DISCORD.PREMIUM_ROLE_ID?'Premium':(id===DISCORD.VIP_ROLE_ID?'VIP':('Rôle '+id)));
+    span.textContent = (id===DISCORD.PREMIUM_ROLE_ID?'Premium':(id===DISCORD.VIP_ROLE_ID?'VIP':(id===DISCORD.MOD_ROLE_ID?'Mod':'Rôle '+id)));
     rolesChips.appendChild(span);
   });
 }
@@ -508,19 +831,28 @@ function setLoggedInUI(hasPremium) {
   logoutBtn.classList.remove('hide');
   loginBtn.classList.add('hide');
 
+  // Show vouch section to all users
+  $('#vouchSection').classList.remove('hide');
+  
+  // Show vouch form only to premium/vip users
   if (hasPremium) {
+    $('#vouchForm').classList.remove('hide');
     accountState.innerHTML = `<div class="ok-text">Accès Premium/VIP validé ✔</div><div class="muted" style="font-size:13px">Tu peux utiliser la recherche.</div>`;
     purchaseBlock.classList.add('hide');
     activationBlock.classList.remove('hide');
     searchGate.classList.add('hide');
     searchUI.classList.remove('hide');
   } else {
+    $('#vouchForm').classList.add('hide');
     accountState.innerHTML = `<div class="danger-text">Accès Premium requis</div><div class="muted" style="font-size:13px">Achète Premium (16,99 €) ou active une clé existante.</div>`;
     purchaseBlock.classList.remove('hide');
     activationBlock.classList.remove('hide');
     searchGate.classList.remove('hide');
     searchUI.classList.add('hide');
   }
+  
+  // Load vouches
+  loadVouches();
 }
 
 async function updateFromDiscord(token) {
@@ -625,6 +957,10 @@ async function activateExistingKeyForUser(key) {
     activatedBy: discordUser.id,
     activatedAt: Date.now()
   });
+  
+  // Assign Discord role after successful key activation
+  const roleAssigned = await assignDiscordRole(discordUser.id);
+  
   return { ...data, status:'active', activatedBy: discordUser.id };
 }
 
@@ -685,12 +1021,13 @@ $('#haveKeyBtn').addEventListener('click', ()=> activationBlock.scrollIntoView({
 $('#activateKeyBtn').addEventListener('click', async ()=>{
   const input = $('#keyInput'); const key = (input.value||'').trim().toUpperCase();
   $('#activationMsg').classList.remove('ok-text','danger-text'); $('#activationMsg').textContent='';
+  $('#roleAssignmentStatus').classList.add('hide');
   try{
     if (!key || key.length !== 32) throw new Error('Clé invalide (32 caractères requis).');
     showLoadingScreen('Activation de votre clé...');
     const activated = await activateExistingKeyForUser(key);
     $('#activationMsg').classList.add('ok-text');
-    $('#activationMsg').textContent = '✅ Clé activée. Ton rôle sera synchronisé côté serveur.';
+    $('#activationMsg').textContent = '✅ Clé activée avec succès!';
     hideLoadingScreen();
   }catch(e){
     $('#activationMsg').classList.add('danger-text');
@@ -702,6 +1039,10 @@ $('#activateKeyBtn').addEventListener('click', async ()=>{
 $('#doSearch').addEventListener('click', ()=> runSearch($('#q').value));
 
 $('#closeSticky').addEventListener('click', ()=> stickyKey.classList.add('hide'));
+
+// Vouch system events
+$('#submitVouch').addEventListener('click', submitVouch);
+setupVouchCharacterCounter();
 
 (async function init(){
   // Show initial loading screen
