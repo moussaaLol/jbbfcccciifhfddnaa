@@ -131,7 +131,111 @@ h1{ font-size:28px; margin:0; letter-spacing:.3px; }
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script>
-const firebaseConfig = { apiKey: "AIzaSyBtVmI_0_9qC6Cj5lmYgbwVJlW8lH11Ouw", authDomain: "nazapi-fc74e.firebaseapp.com", projectId: "nazapi-fc74e", storageBucket: "nazapi-fc74e.firebasestorage.app", messagingSenderId: "1011679210688", appId: "1:1011679210688:web:eeccc40063f83b91e3d125", measurementId: "G-522271ZX8N" }; const app = firebase.initializeApp(firebaseConfig); const db = firebase.firestore(); const DISCORD = { CLIENT_ID: '1407764995671986249', REDIRECT_URI: window.location.origin + window.location.pathname, SCOPES: ['identify','guilds.members.read'], GUILD_ID: '1406489247543984240', PREMIUM_ROLE_ID: '1406489247573086400' }; let discordAuth = null; let discordUser = null; const qs = sel => document.querySelector(sel); function hideLoadingScreen(){qs('#loadingScreen')?.classList.add('hidden');} function showOnly(sectionId){qs('#cardRoot')?.querySelectorAll(':scope > div').forEach(d=>d.classList.add('hidden')); qs('#'+sectionId)?.classList.remove('hidden');} function saveSession(){try{if(discordAuth)sessionStorage.setItem('nazapi_discord_auth',JSON.stringify(discordAuth)); if(discordUser)sessionStorage.setItem('nazapi_discord_user',JSON.stringify(discordUser));}catch{}} function loadSession(){try{const a=sessionStorage.getItem('nazapi_discord_auth'); const u=sessionStorage.getItem('nazapi_discord_user'); if(a)discordAuth=JSON.parse(a); if(u)discordUser=JSON.parse(u);}catch{}} function storePaymentCompleted(id){if(id)sessionStorage.setItem('nazapi_payment_completed',id);} function getStoredPaymentCompleted(){return sessionStorage.getItem('nazapi_payment_completed');} function parseImplicitTokenAndState(){if(!location.hash||!location.hash.startsWith('#'))return null; const h=new URLSearchParams(location.hash.slice(1)); const token=h.get('access_token'); if(!token)return null; const tokenType=h.get('token_type')||'Bearer'; const expires=Number(h.get('expires_in')||0); const state=h.get('state')||''; history.replaceState({},document.title,location.pathname+location.search); return {token,tokenType,expires,state};} async function fetchDiscordJSON(token,path){const r=await fetch(https://discord.com/api${path},{headers:{Authorization:Bearer ${token}}}); if(!r.ok)throw new Error('Discord API error: '+r.status); return r.json();} function buildDiscordOAuthURL(extraState=''){const params=new URLSearchParams({client_id:DISCORD.CLIENT_ID,response_type:'token',redirect_uri:DISCORD.REDIRECT_URI,scope:DISCORD.SCOPES.join(' '),state:extraState}); return https://discord.com/oauth2/authorize?${params.toString()};} function loginDiscord(paymentCompletedId){const pc=paymentCompletedId||getStoredPaymentCompleted()||new URLSearchParams(location.search).get('payment_completed')||''; storePaymentCompleted(pc); const state=pc?pc=${encodeURIComponent(pc)}:''; window.location.href=buildDiscordOAuthURL(state);} function logout(){discordAuth=null; discordUser=null; sessionStorage.removeItem('nazapi_discord_auth'); sessionStorage.removeItem('nazapi_discord_user'); window.location.href='/';} async function updateFromDiscord(token){discordUser=await fetchDiscordJSON(token,'/users/@me'); saveSession(); return true;} // ------------------ // Générateur de clé identique à ton bot // ------------------ function generateLicenseKey() { const segments = []; const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; for(let i=0;i<5;i++){ let seg=''; for(let j=0;j<5;j++) seg+=chars.charAt(Math.floor(Math.random()*chars.length)); segments.push(seg); } return segments.join('-'); } // ------------------ // Main // ------------------ document.addEventListener('DOMContentLoaded', async () => { qs('#year').textContent = new Date().getFullYear(); let paymentCompleted = new URLSearchParams(location.search).get('payment_completed'); const parsed = parseImplicitTokenAndState(); if(parsed){discordAuth={token:parsed.token,tokenType:parsed.tokenType,expires:parsed.expires}; if(parsed.state?.startsWith('pc=')){const pc=decodeURIComponent(parsed.state.slice(3)); if(pc){storePaymentCompleted(pc); paymentCompleted=pc;}}}else{loadSession();} if(!paymentCompleted){const stored=getStoredPaymentCompleted(); if(stored){paymentCompleted=stored; const url=new URL(location.href); url.searchParams.set('payment_completed',stored); history.replaceState({},document.title,url.toString());}} else {storePaymentCompleted(paymentCompleted);} try { // Vérification Firestore if(!paymentCompleted || !/^pi_[A-Za-z0-9_]+$/.test(paymentCompleted)){showOnly('errorSection'); return;} const paymentRef=db.collection('payments').doc(paymentCompleted); const paymentDoc=await paymentRef.get(); if(!paymentDoc.exists){showOnly('errorSection'); return;} const paymentData=paymentDoc.data(); if(paymentData.used){window.location.href='/'; return;} // Vérification Discord if(!(discordAuth?.token)){showOnly('loginSection'); qs('#discordLoginBtn')?.addEventListener('click',e=>{e.preventDefault();loginDiscord(paymentCompleted);}); return;} if(!discordUser){try{await updateFromDiscord(discordAuth.token);}catch(e){sessionStorage.removeItem('nazapi_discord_auth'); showOnly('loginSection'); qs('#discordLoginBtn')?.addEventListener('click',ev=>{ev.preventDefault();loginDiscord(paymentCompleted);}); return;}} // Affichage vérification utilisateur showOnly('verificationSection'); qs('#username').textContent=${discordUser.username}#${discordUser.discriminator||'0'}; qs('#userId').textContent=ID: ${discordUser.id}; const avatarImage=qs('#avatarImage'); const avatarInitial=qs('#avatarInitial'); if(discordUser.avatar){avatarImage.src=https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png; avatarImage.style.display='block'; avatarInitial.style.display='none';} else {avatarImage.style.display='none'; avatarInitial.textContent=discordUser.username.charAt(0).toUpperCase(); avatarInitial.style.display='block';} // Confirm button qs('#confirmButton')?.addEventListener('click', async function(){ const btn=this; const original=btn.textContent; btn.textContent='Traitement…'; btn.disabled=true; try{ // Mise à jour Firestore await paymentRef.update({used:true, discordId:discordUser.id, usedAt:firebase.firestore.FieldValue.serverTimestamp()}); // Génération clé const licenseKey=generateLicenseKey(); showOnly('confirmationSection'); qs('#licenseKey').textContent=licenseKey; const now=new Date(); const expiration=new Date(now.getTime()+30*24*60*60*1000); const options={day:'numeric',month:'long',year:'numeric'}; qs('#activationDate').textContent=now.toLocaleDateString('fr-FR',options); qs('#expirationDate').textContent=expiration.toLocaleDateString('fr-FR',options); }catch(e){console.error(e); alert('Erreur, réessayez.'); btn.textContent=original; btn.disabled=false;} }); qs('#cancelButton')?.addEventListener('click',()=>loginDiscord(paymentCompleted)); qs('#notMeLink')?.addEventListener('click',logout); }catch(err){console.error(err); showOnly('errorSection');} finally{hideLoadingScreen();} setTimeout(hideLoadingScreen,5000); });
+  const firebaseConfig = {
+  apiKey: "AIzaSyBtVmI_0_9qC6Cj5lmYgbwVJlW8lH11Ouw",
+  authDomain: "nazapi-fc74e.firebaseapp.com",
+  projectId: "nazapi-fc74e",
+  storageBucket: "nazapi-fc74e.firebasestorage.app",
+  messagingSenderId: "1011679210688",
+  appId: "1:1011679210688:web:eeccc40063f83b91e3d125",
+  measurementId: "G-522271ZX8N"
+};
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const DISCORD = {
+  CLIENT_ID: '1407764995671986249',
+  REDIRECT_URI: window.location.origin + window.location.pathname,
+  SCOPES: ['identify','guilds.members.read'],
+  GUILD_ID: '1406489247543984240',
+  PREMIUM_ROLE_ID: '1406489247573086400'
+};
+
+let discordAuth = null;
+let discordUser = null;
+
+const qs = sel => document.querySelector(sel);
+function hideLoadingScreen(){qs('#loadingScreen')?.classList.add('hidden');}
+function showOnly(sectionId){qs('#cardRoot')?.querySelectorAll(':scope > div').forEach(d=>d.classList.add('hidden')); qs('#'+sectionId)?.classList.remove('hidden');}
+function saveSession(){try{if(discordAuth)sessionStorage.setItem('nazapi_discord_auth',JSON.stringify(discordAuth)); if(discordUser)sessionStorage.setItem('nazapi_discord_user',JSON.stringify(discordUser));}catch{}}
+function loadSession(){try{const a=sessionStorage.getItem('nazapi_discord_auth'); const u=sessionStorage.getItem('nazapi_discord_user'); if(a)discordAuth=JSON.parse(a); if(u)discordUser=JSON.parse(u);}catch{}}
+function storePaymentCompleted(id){if(id)sessionStorage.setItem('nazapi_payment_completed',id);}
+function getStoredPaymentCompleted(){return sessionStorage.getItem('nazapi_payment_completed');}
+function parseImplicitTokenAndState(){if(!location.hash||!location.hash.startsWith('#'))return null; const h=new URLSearchParams(location.hash.slice(1)); const token=h.get('access_token'); if(!token)return null; const tokenType=h.get('token_type')||'Bearer'; const expires=Number(h.get('expires_in')||0); const state=h.get('state')||''; history.replaceState({},document.title,location.pathname+location.search); return {token,tokenType,expires,state};}
+async function fetchDiscordJSON(token,path){const r=await fetch(`https://discord.com/api${path}`,{headers:{Authorization:`Bearer ${token}`}}); if(!r.ok)throw new Error('Discord API error: '+r.status); return r.json();}
+function buildDiscordOAuthURL(extraState=''){const params=new URLSearchParams({client_id:DISCORD.CLIENT_ID,response_type:'token',redirect_uri:DISCORD.REDIRECT_URI,scope:DISCORD.SCOPES.join(' '),state:extraState}); return `https://discord.com/oauth2/authorize?${params.toString()}`;}
+function loginDiscord(paymentCompletedId){const pc=paymentCompletedId||getStoredPaymentCompleted()||new URLSearchParams(location.search).get('payment_completed')||''; storePaymentCompleted(pc); const state=pc?`pc=${encodeURIComponent(pc)}`:''; window.location.href=buildDiscordOAuthURL(state);}
+function logout(){discordAuth=null; discordUser=null; sessionStorage.removeItem('nazapi_discord_auth'); sessionStorage.removeItem('nazapi_discord_user'); window.location.href='/';}
+async function updateFromDiscord(token){discordUser=await fetchDiscordJSON(token,'/users/@me'); saveSession(); return true;}
+
+// ------------------
+// Générateur de clé identique à ton bot
+// ------------------
+function generateLicenseKey() {
+  const segments = [];
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  for(let i=0;i<5;i++){
+    let seg='';
+    for(let j=0;j<5;j++) seg+=chars.charAt(Math.floor(Math.random()*chars.length));
+    segments.push(seg);
+  }
+  return segments.join('-');
+}
+
+// ------------------
+// Main
+// ------------------
+document.addEventListener('DOMContentLoaded', async () => {
+  qs('#year').textContent = new Date().getFullYear();
+  let paymentCompleted = new URLSearchParams(location.search).get('payment_completed');
+  const parsed = parseImplicitTokenAndState();
+  if(parsed){discordAuth={token:parsed.token,tokenType:parsed.tokenType,expires:parsed.expires}; if(parsed.state?.startsWith('pc=')){const pc=decodeURIComponent(parsed.state.slice(3)); if(pc){storePaymentCompleted(pc); paymentCompleted=pc;}}}else{loadSession();}
+  if(!paymentCompleted){const stored=getStoredPaymentCompleted(); if(stored){paymentCompleted=stored; const url=new URL(location.href); url.searchParams.set('payment_completed',stored); history.replaceState({},document.title,url.toString());}} else {storePaymentCompleted(paymentCompleted);}
+  
+  try {
+    // Vérification Firestore
+    if(!paymentCompleted || !/^pi_[A-Za-z0-9_]+$/.test(paymentCompleted)){showOnly('errorSection'); return;}
+    const paymentRef=db.collection('payments').doc(paymentCompleted);
+    const paymentDoc=await paymentRef.get();
+    if(!paymentDoc.exists){showOnly('errorSection'); return;}
+    const paymentData=paymentDoc.data();
+    if(paymentData.used){window.location.href='/'; return;}
+    
+    // Vérification Discord
+    if(!(discordAuth?.token)){showOnly('loginSection'); qs('#discordLoginBtn')?.addEventListener('click',e=>{e.preventDefault();loginDiscord(paymentCompleted);}); return;}
+    if(!discordUser){try{await updateFromDiscord(discordAuth.token);}catch(e){sessionStorage.removeItem('nazapi_discord_auth'); showOnly('loginSection'); qs('#discordLoginBtn')?.addEventListener('click',ev=>{ev.preventDefault();loginDiscord(paymentCompleted);}); return;}}
+    
+    // Affichage vérification utilisateur
+    showOnly('verificationSection');
+    qs('#username').textContent=`${discordUser.username}#${discordUser.discriminator||'0'}`;
+    qs('#userId').textContent=`ID: ${discordUser.id}`;
+    const avatarImage=qs('#avatarImage'); const avatarInitial=qs('#avatarInitial');
+    if(discordUser.avatar){avatarImage.src=`https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`; avatarImage.style.display='block'; avatarInitial.style.display='none';} else {avatarImage.style.display='none'; avatarInitial.textContent=discordUser.username.charAt(0).toUpperCase(); avatarInitial.style.display='block';}
+    
+    // Confirm button
+    qs('#confirmButton')?.addEventListener('click', async function(){
+      const btn=this; const original=btn.textContent; btn.textContent='Traitement…'; btn.disabled=true;
+      try{
+        // Mise à jour Firestore
+        await paymentRef.update({used:true, discordId:discordUser.id, usedAt:firebase.firestore.FieldValue.serverTimestamp()});
+        // Génération clé
+        const licenseKey=generateLicenseKey();
+        showOnly('confirmationSection');
+        qs('#licenseKey').textContent=licenseKey;
+        const now=new Date(); const expiration=new Date(now.getTime()+30*24*60*60*1000);
+        const options={day:'numeric',month:'long',year:'numeric'};
+        qs('#activationDate').textContent=now.toLocaleDateString('fr-FR',options);
+        qs('#expirationDate').textContent=expiration.toLocaleDateString('fr-FR',options);
+      }catch(e){console.error(e); alert('Erreur, réessayez.'); btn.textContent=original; btn.disabled=false;}
+    });
+
+    qs('#cancelButton')?.addEventListener('click',()=>loginDiscord(paymentCompleted));
+    qs('#notMeLink')?.addEventListener('click',logout);
+
+  }catch(err){console.error(err); showOnly('errorSection');} finally{hideLoadingScreen();}
+  setTimeout(hideLoadingScreen,5000);
+});
 </script>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </script>
 </body>
 </html>
