@@ -75,216 +75,286 @@
   .btn.secondary{ background: linear-gradient(180deg, #232b3b, #1a2230) }
   
   /* Checkmark animation */
-  .checkmark-container {
-    width: 100px;
-    height: 100px;
-    margin: 0 auto 30px;
-    position: relative;
-  }
-  .checkmark-circle {
-    stroke-dasharray: 300;
-    stroke-dashoffset: 300;
-    stroke-width: 3;
-    stroke: var(--ok);
-    fill: none;
-    animation: draw-circle 1s ease-in-out forwards;
-  }
-  .checkmark {
-    stroke-dasharray: 100;
-    stroke-dashoffset: 100;
-    stroke-width: 4;
-    stroke: var(--ok);
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    fill: none;
-    animation: draw-check 0.8s ease-in-out 0.8s forwards;
-  }
-  @keyframes draw-circle {
-    to { stroke-dashoffset: 0; }
-  }
-  @keyframes draw-check {
-    to { stroke-dashoffset: 0; }
-  }
-  
-  .confirmation-text {
-    font-size: 24px;
-    margin-bottom: 15px;
-    color: var(--ok);
-    font-weight: 600;
-  }
-  
-  .order-details {
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 12px;
-    padding: 20px;
-    margin: 25px 0;
-    text-align: left;
-  }
-  
-  .detail-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-  }
-  
-  .detail-label {
-    color: var(--muted);
-  }
-  
-  .detail-value {
-    font-weight: 500;
-  }
-  
-  .note {
-    font-size: 14px;
-    color: var(--muted);
-    margin-top: 25px;
-    line-height: 1.5;
-  }
-  
-  .footer{
-    opacity:.85; margin-top:40px; padding:16px; text-align:center; font-size:13px; color:var(--muted)
-  }
-  
-  /* Verification styles */
-  .user-verification {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    margin: 25px 0;
-  }
-  
-  .user-info {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    background: rgba(255, 255, 255, 0.03);
-    padding: 15px;
-    border-radius: 12px;
-    width: 100%;
-    max-width: 350px;
-  }
-  
-  .user-avatar {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: linear-gradient(45deg, #6de1ff, #7c6dff);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 24px;
-    overflow: hidden;
-  }
-  
-  .user-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  .user-details {
-    text-align: left;
-  }
-  
-  .username {
-    font-weight: 600;
-    margin-bottom: 5px;
-  }
-  
-  .user-id {
-    font-size: 12px;
-    color: var(--muted);
-  }
-  
-  .verification-buttons {
-    display: flex;
-    gap: 15px;
-    margin-top: 10px;
-  }
-  
-  .not-me {
-    color: var(--accent);
-    cursor: pointer;
-    text-decoration: underline;
-    margin-top: 15px;
-  }
-  
-  .hidden {
-    display: none;
-  }
-  
-  .error-message {
-    color: var(--danger);
-    padding: 15px;
-    background: rgba(255, 107, 107, 0.1);
-    border-radius: 12px;
-    margin: 20px 0;
-    text-align: center;
-  }
-  
-  .loading-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--bg);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-  }
-  .loading-spinner {
-    width: 50px;
-    height: 50px;
-    border: 3px solid rgba(109, 225, 255, 0.3);
-    border-radius: 50%;
-    border-top-color: var(--accent);
-    animation: spin 1s ease-in-out infinite;
-    margin-bottom: 20px;
-  }
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-  
-  .login-prompt {
-    text-align: center;
-    padding: 20px;
-  }
-  
-  .discord-login-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    background: #5865F2;
-    color: white;
-    padding: 12px 20px;
-    border-radius: 12px;
-    text-decoration: none;
-    font-weight: 600;
-    margin-top: 20px;
-    transition: all 0.2s ease;
-  }
-  
-  .discord-login-btn:hover {
-    background: #4752c4;
-    transform: translateY(-2px);
-  }
-  
-  .loading-dots::after {
-    content: '';
-    animation: dots 1.5s infinite;
-  }
-  
-  @keyframes dots {
-    0%, 20% { content: '.'; }
-    40% { content: '..'; }
-    60%, 100% { content: '...'; }
-  }
+  <style>
+  :root{
+    --bg: #0b0f1a;
+    --card: rgba(255,255,255,0.06);
+    --card-strong: rgba(255,255,255,0.12);
+    --text: #e8ecf1;
+    --muted: #9fb2c8;
+    --accent: #6de1ff;
+    --ok: #3ad29f;
+    --warn: #ffd166;
+    --danger:#ff6b6b;
+    --ring: rgba(109,225,255,.35);
+    --shadow: 0 10px 30px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.05);
+    --radius: 18px;
+  }
+  html,body{height:100%}
+  body{
+    margin:0; font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Inter,Arial;
+    color:var(--text); background: radial-gradient(1200px 800px at 15% -10%,#16223a 0%,transparent 60%),
+                       radial-gradient(1000px 700px at 85% -5%,#1a2d4b 0%,transparent 60%),
+                       radial-gradient(1200px 900px at 50% 110%,#111a2a 0%,transparent 60%), var(--bg);
+    background-attachment: fixed;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+  /* étoiles */
+  .stars, .stars2, .stars3{
+    position:fixed; inset:0; pointer-events:none; background-repeat:repeat; z-index:-1; opacity:.6;
+    background-image: radial-gradient(1px 1px at 20px 30px,#fff,transparent 50%),
+                      radial-gradient(1px 1px at 80px 120px,#fff,transparent 50%),
+                      radial-gradient(1px 1px at 200px 80px,#fff,transparent 50%),
+                      radial-gradient(1px 1px at 320px 40px,#fff,transparent 50%),
+                      radial-gradient(1px 1px at 440px 160px,#fff,transparent 50%);
+    animation: twinkle 16s linear infinite;
+  }
+  .stars2{ animation-duration:22s; opacity:.4; transform:scale(1.2) }
+  .stars3{ animation-duration:30s; opacity:.25; transform:scale(1.4) }
+  @keyframes twinkle { 0%{filter:brightness(.9)} 50%{filter:brightness(1.1)} 100%{filter:brightness(.9)} }
+
+  .wrap{ max-width:600px; margin:auto; padding:32px 20px; }
+  .brand{ display:flex; align-items:center; gap:12px; justify-content: center; margin-bottom: 30px; }
+  .logo{
+    width:60px; height:60px; border-radius:16px; background:
+      radial-gradient(18px 14px at 14px 14px, #6de1ff 0%, #4cc2ff 35%, transparent 60%),
+      conic-gradient(from 220deg,#6de1ff, #7c6dff, #eb6cff, #6de1ff);
+    box-shadow: 0 0 30px rgba(109,225,255,.4), inset 0 0 0 2px rgba(255,255,255,.07);
+  }
+  h1{ font-size:28px; margin:0; letter-spacing:.3px; text-align: center; }
+  .card{
+    background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    padding:40px 30px; border:1px solid rgba(255,255,255,.06);
+    text-align: center;
+  }
+  .muted{ color:var(--muted) }
+  .btn{
+    appearance:none; border:0; padding:12px 24px; border-radius:14px; font-weight:600; cursor:pointer;
+    background: linear-gradient(180deg, #1d2a42, #141c2b); color:#eaf7ff;
+    box-shadow: var(--shadow); transition: transform .05s ease, box-shadow .2s ease;
+    margin-top: 20px;
+  }
+  .btn:hover{ box-shadow: 0 14px 36px rgba(109,225,255,.25), inset 0 0 0 1px var(--ring) }
+  .btn:active{ transform: translateY(1px) }
+  .btn.ok{ background: linear-gradient(180deg, #1f3a34, #122722) }
+  .btn.secondary{ background: linear-gradient(180deg, #232b3b, #1a2230) }
+  
+  /* Checkmark animation */
+  .checkmark-container {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 30px;
+    position: relative;
+  }
+  .checkmark-circle {
+    stroke-dasharray: 300;
+    stroke-dashoffset: 300;
+    stroke-width: 3;
+    stroke: var(--ok);
+    fill: none;
+    animation: draw-circle 1s ease-in-out forwards;
+  }
+  .checkmark {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    stroke-width: 4;
+    stroke: var(--ok);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    animation: draw-check 0.8s ease-in-out 0.8s forwards;
+  }
+  @keyframes draw-circle {
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes draw-check {
+    to { stroke-dashoffset: 0; }
+  }
+  
+  .confirmation-text {
+    font-size: 24px;
+    margin-bottom: 15px;
+    color: var(--ok);
+    font-weight: 600;
+  }
+  
+  .order-details {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 25px 0;
+    text-align: left;
+  }
+  
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  
+  .detail-label {
+    color: var(--muted);
+  }
+  
+  .detail-value {
+    font-weight: 500;
+  }
+  
+  .note {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 25px;
+    line-height: 1.5;
+  }
+  
+  .footer{
+    opacity:.85; margin-top:40px; padding:16px; text-align:center; font-size:13px; color:var(--muted)
+  }
+  
+  /* Verification styles */
+  .user-verification {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    margin: 25px 0;
+  }
+  
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 15px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 350px;
+  }
+  
+  .user-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #6de1ff, #7c6dff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 24px;
+    overflow: hidden;
+  }
+  
+  .user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .user-details {
+    text-align: left;
+  }
+  
+  .username {
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+  
+  .user-id {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  
+  .verification-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+  }
+  
+  .not-me {
+    color: var(--accent);
+    cursor: pointer;
+    text-decoration: underline;
+    margin-top: 15px;
+  }
+  
+  .hidden {
+    display: none;
+  }
+  
+  .error-message {
+    color: var(--danger);
+    padding: 15px;
+    background: rgba(255, 107, 107, 0.1);
+    border-radius: 12px;
+    margin: 20px 0;
+    text-align: center;
+  }
+  
+  .loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+  .loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(109, 225, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--accent);
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 20px;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  .login-prompt {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .discord-login-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #5865F2;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: 20px;
+    transition: all 0.2s ease;
+  }
+  
+  .discord-login-btn:hover {
+    background: #4752c4;
+    transform: translateY(-2px);
+  }
+  
+  .loading-dots::after {
+    content: '';
+    animation: dots 1.5s infinite;
+  }
+  
+  @keyframes dots {
+    0%, 20% { content: '.'; }
+    40% { content: '..'; }
+    60%, 100% { content: '...'; }
+  }
 </style>
 </head>
 <body>
