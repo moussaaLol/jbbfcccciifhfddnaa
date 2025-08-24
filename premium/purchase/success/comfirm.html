@@ -22,27 +22,15 @@
 }
 html,body{height:100%}
 body{
-  margin:0;
-  font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Inter,Arial;
+  margin:0; font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Inter,Arial;
   color:var(--text);
   background: radial-gradient(1200px 800px at 15% -10%,#16223a 0%,transparent 60%),
               radial-gradient(1000px 700px at 85% -5%,#1a2d4b 0%,transparent 60%),
-              radial-gradient(1200px 900px at 50% 110%,#111a2a 0%,transparent 60%),
-              var(--bg);
-  background-attachment: fixed;
-  overflow-y: auto;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
+              radial-gradient(1200px 900px at 50% 110%,#111a2a 0%,transparent 60%), var(--bg);
+  background-attachment: fixed; overflow-y: auto;
+  display: flex; justify-content: center; align-items: center; min-height: 100vh;
 }
-.stars, .stars2, .stars3{
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  background-repeat:repeat;
-  z-index:-1;
-  opacity:.6;
+.stars, .stars2, .stars3{ position:fixed; inset:0; pointer-events:none; background-repeat:repeat; z-index:-1; opacity:.6;
   background-image: radial-gradient(1px 1px at 20px 30px,#fff,transparent 50%),
                     radial-gradient(1px 1px at 80px 120px,#fff,transparent 50%),
                     radial-gradient(1px 1px at 200px 80px,#fff,transparent 50%),
@@ -52,7 +40,7 @@ body{
 }
 .stars2{ animation-duration:22s; opacity:.4; transform:scale(1.2) }
 .stars3{ animation-duration:30s; opacity:.25; transform:scale(1.4) }
-@keyframes twinkle {0%{filter:brightness(.9)}50%{filter:brightness(1.1)}100%{filter:brightness(.9)}}
+@keyframes twinkle { 0%{filter:brightness(.9)} 50%{filter:brightness(1.1)} 100%{filter:brightness(.9)} }
 .wrap{ max-width:600px; margin:auto; padding:32px 20px; }
 .brand{ display:flex; align-items:center; gap:12px; justify-content: center; margin-bottom: 30px; }
 .logo{ width:60px; height:60px; border-radius:16px; background: radial-gradient(18px 14px at 14px 14px, #6de1ff 0%, #4cc2ff 35%, transparent 60%), conic-gradient(from 220deg,#6de1ff, #7c6dff, #eb6cff, #6de1ff); box-shadow: 0 0 30px rgba(109,225,255,.4), inset 0 0 0 2px rgba(255,255,255,.07); }
@@ -103,6 +91,7 @@ h1{ font-size:28px; margin:0; letter-spacing:.3px; text-align: center; }
   <div class="loading-spinner"></div>
   <div class="loading-text">Vérification en cours<span class="loading-dots"></span></div>
 </div>
+
 <div class="wrap">
 <div class="brand">
   <div class="logo" aria-hidden="true"></div>
@@ -111,6 +100,7 @@ h1{ font-size:28px; margin:0; letter-spacing:.3px; text-align: center; }
     <div class="muted" style="font-size:13px; text-align: center;">Merci pour votre confiance</div>
   </div>
 </div>
+
 <div class="card" id="cardRoot">
   <div id="errorSection" class="hidden">
     <div class="error-message">
@@ -119,6 +109,7 @@ h1{ font-size:28px; margin:0; letter-spacing:.3px; text-align: center; }
     </div>
     <button class="btn ok" onclick="window.location.href='/'">Retour à l'accueil</button>
   </div>
+
   <div id="loginSection" class="hidden">
     <h2 style="margin-bottom: 20px;">Connexion requise</h2>
     <p class="muted">Veuillez vous connecter avec Discord pour confirmer votre achat.</p>
@@ -131,6 +122,7 @@ h1{ font-size:28px; margin:0; letter-spacing:.3px; text-align: center; }
       </a>
     </div>
   </div>
+
   <div id="verificationSection" class="hidden">
     <h2 style="margin-bottom: 20px;">Confirmation de paiement</h2>
     <p class="muted">Nous avons besoin de confirmer votre identité pour finaliser votre achat.</p>
@@ -155,6 +147,7 @@ h1{ font-size:28px; margin:0; letter-spacing:.3px; text-align: center; }
       </div>
     </div>
   </div>
+
   <div id="confirmationSection" class="hidden">
     <div class="checkmark-container">
       <svg viewBox="0 0 100 100">
@@ -162,93 +155,115 @@ h1{ font-size:28px; margin:0; letter-spacing:.3px; text-align: center; }
         <path class="checkmark" d="M30,50 L45,65 L70,35" />
       </svg>
     </div>
-    <div class="confirmation-text">Paiement confirmé !</div>
-    <div class="order-details">
-      <div class="detail-row"><span class="detail-label">Clé générée:</span><span class="detail-value" id="generatedKey">...</span></div>
-      <div class="detail-row"><span class="detail-label">Date:</span><span class="detail-value" id="purchaseDate"></span></div>
-    </div>
-    <div class="note">Vous pouvez maintenant utiliser votre clé dans le bot Discord. Merci pour votre achat !</div>
+    <div class="confirmation-text">Merci pour votre achat !</div>
+    <p class="muted">Voici votre clé générée :</p>
+    <div class="order-details" id="generatedKey">Chargement...</div>
+    <p class="note">Conservez cette clé précieusement, elle vous servira pour activer votre produit.</p>
     <button class="btn ok" onclick="window.location.href='/'">Retour à l'accueil</button>
   </div>
 </div>
-<div class="footer">© 2025 NazAPI. Tous droits réservés.</div>
+<div class="footer">© NazAPI 2025</div>
 </div>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
-// =========================
-// CONFIG FIREBASE
-// =========================
 const firebaseConfig = {
-  apiKey: "AIzaSyBtVmI_0_9qC6Cj5lmYgbwVJlW8lH11Ouw",
-  authDomain: "nazapi-fc74e.firebaseapp.com",
-  projectId: "nazapi-fc74e",
-  storageBucket: "nazapi-fc74e.firebasestorage.app",
-  messagingSenderId: "1011679210688",
-  appId: "1:1011679210688:web:eeccc40063f83b91e3d125",
-  measurementId: "G-522271ZX8N"
+  apiKey: "YOUR_FIREBASE_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_ID",
+  appId: "YOUR_APP_ID"
 };
 firebase.initializeApp(firebaseConfig);
-const db=firebase.firestore();
+const db = firebase.firestore();
 
-// =========================
-// UTILITAIRES
-// =========================
-function showOnly(id){
-  ['errorSection','loginSection','verificationSection','confirmationSection'].forEach(s=>document.getElementById(s).classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
-}
-function hideLoadingScreen(){document.getElementById('loadingScreen').style.display='none';}
+const discordClientId = "1407764995671986249";
+const redirectUri = window.location.origin + window.location.pathname;
 
-// =========================
-// DEMARRAGE
-// =========================
-document.addEventListener('DOMContentLoaded', async () => {
-  // fallback
-  setTimeout(hideLoadingScreen,7000);
-
-  try{
-    const urlParams = new URLSearchParams(window.location.search);
-    const paymentId = urlParams.get('payment_completed');
-    if(!paymentId){ showOnly('errorSection'); hideLoadingScreen(); return; }
-
-    // Vérification dans Firestore
-    const paymentDoc = await db.collection('payments').doc(paymentId).get();
-    if(!paymentDoc.exists){ showOnly('errorSection'); hideLoadingScreen(); return; }
-    const paymentData = paymentDoc.data();
-    if(paymentData.used){ window.location.href='/'; hideLoadingScreen(); return; }
-
-    // Récupération Discord OAuth (à implémenter)
-    const discordUser = JSON.parse(sessionStorage.getItem('discordUser') || 'null');
-    if(!discordUser){ showOnly('loginSection'); hideLoadingScreen(); return; }
-
-    // Affichage infos utilisateur
-    document.getElementById('username').textContent = discordUser.username;
-    document.getElementById('userId').textContent = `ID: ${discordUser.id}`;
-    if(discordUser.avatar){
-      document.getElementById('avatarImage').src = `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`;
-      document.getElementById('avatarInitial').style.display='none';
-    }else{
-      document.getElementById('avatarInitial').textContent = discordUser.username[0].toUpperCase();
-      document.getElementById('avatarImage').style.display='none';
+function parseTokenFromHash() {
+  if(location.hash){
+    const params = new URLSearchParams(location.hash.substring(1));
+    const token = params.get('access_token');
+    if(token){
+      sessionStorage.setItem('discord_token', token);
+      location.hash = '';
+      return token;
     }
+  }
+  return sessionStorage.getItem('discord_token');
+}
 
-    showOnly('verificationSection');
+async function fetchDiscordJSON(token, endpoint) {
+  const res = await fetch(`https://discord.com/api/v10${endpoint}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if(!res.ok) throw new Error('Discord fetch failed');
+  return await res.json();
+}
 
-    document.getElementById('confirmButton').onclick = async () => {
-      // Génération clé comme dans ton bot
-      const key = 'NAZ-'+Math.random().toString(36).substring(2,10).toUpperCase();
-      document.getElementById('generatedKey').textContent = key;
-      const now = new Date().toLocaleString();
-      document.getElementById('purchaseDate').textContent = now;
-      await db.collection('payments').doc(paymentId).update({used:true});
-      showOnly('confirmationSection');
-    };
-    document.getElementById('cancelButton').onclick = () => window.location.href='/';
-    document.getElementById('notMeLink').onclick = () => { sessionStorage.removeItem('discordUser'); window.location.href='/'; }
+function showSection(id){ 
+  ['errorSection','loginSection','verificationSection','confirmationSection'].forEach(s=>document.getElementById(s).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden'); 
+}
 
-  }catch(err){ console.error(err); showOnly('errorSection'); hideLoadingScreen(); }
-});
+function generateKey(){ 
+  const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"; let k="";
+  for(let i=0;i<16;i++) k+=chars[Math.floor(Math.random()*chars.length)]; return k;
+}
+
+async function verifyPayment(user){
+  const urlParams = new URLSearchParams(window.location.search);
+  const paymentId = urlParams.get('payment');
+  if(!paymentId) return false;
+  const doc = await db.collection('payments').doc(paymentId).get();
+  if(!doc.exists) return false;
+  const data = doc.data();
+  if(data.used) return false;
+  return {docRef: doc.ref, data};
+}
+
+window.onload = async ()=>{
+  const token = parseTokenFromHash();
+  if(!token){
+    showSection('loginSection');
+    document.getElementById('discordLoginBtn').href = 
+      `https://discord.com/api/oauth2/authorize?client_id=${discordClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=identify`;
+    document.getElementById('loadingScreen').style.display='none';
+    return;
+  }
+
+  let user=null;
+  try{ user = await fetchDiscordJSON(token,'/users/@me'); }catch(e){ 
+    console.error(e); sessionStorage.removeItem('discord_token'); showSection('loginSection'); document.getElementById('loadingScreen').style.display='none'; return; 
+  }
+
+  document.getElementById('avatarImage').src = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : '';
+  document.getElementById('avatarInitial').textContent = user.username[0];
+  document.getElementById('username').textContent = user.username;
+  document.getElementById('userId').textContent = "ID: "+user.id;
+
+  const paymentCheck = await verifyPayment(user);
+  if(!paymentCheck){
+    showSection('errorSection');
+    document.getElementById('loadingScreen').style.display='none';
+    return;
+  }
+
+  showSection('verificationSection');
+  document.getElementById('loadingScreen').style.display='none';
+
+  document.getElementById('confirmButton').onclick = async ()=>{
+    // Mark payment used
+    await paymentCheck.docRef.update({used:true});
+    document.getElementById('generatedKey').textContent = generateKey();
+    showSection('confirmationSection');
+  };
+
+  document.getElementById('cancelButton').onclick = ()=>{ showSection('loginSection'); sessionStorage.removeItem('discord_token'); }
+  document.getElementById('notMeLink').onclick = ()=>{ showSection('loginSection'); sessionStorage.removeItem('discord_token'); }
+};
 </script>
 </body>
 </html>
