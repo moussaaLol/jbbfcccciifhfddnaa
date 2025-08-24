@@ -1,0 +1,12 @@
+{
+  "name": "nazapi-website",
+  "version": "1.0.0",
+  "description": "A website for NazAPI with a Stripe payment integration.",
+  "main": "api/create-payment-intent.js",
+  "scripts": {
+    "start": "node api/create-payment-intent.js"
+  },
+  "dependencies": {
+    "stripe": "^16.5.0"
+  }
+}
