@@ -274,6 +274,17 @@
     background: #4752c4;
     transform: translateY(-2px);
   }
+  
+  .loading-dots::after {
+    content: '';
+    animation: dots 1.5s infinite;
+  }
+  
+  @keyframes dots {
+    0%, 20% { content: '.'; }
+    40% { content: '..'; }
+    60%, 100% { content: '...'; }
+  }
 </style>
 </head>
 <body>
@@ -424,11 +435,16 @@
   }
 
   async function fetchDiscordJSON(token, path) {
-    const r = await fetch(`https://discord.com/api${path}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!r.ok) throw new Error('Discord API error: ' + r.status);
-    return r.json();
+    try {
+      const r = await fetch(`https://discord.com/api${path}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!r.ok) throw new Error('Discord API error: ' + r.status);
+      return r.json();
+    } catch (error) {
+      console.error('Erreur lors de la récupération des données Discord:', error);
+      throw error;
+    }
   }
 
   function loginDiscord() {
@@ -460,10 +476,15 @@
 
   function loadSession() {
     try {
-      discordAuth = JSON.parse(localStorage.getItem('nazapi_discord_auth') || 'null');
-      discordUser = JSON.parse(localStorage.getItem('nazapi_discord_user') || 'null');
+      const authData = localStorage.getItem('nazapi_discord_auth');
+      const userData = localStorage.getItem('nazapi_discord_user');
+      
+      if (authData) discordAuth = JSON.parse(authData);
+      if (userData) discordUser = JSON.parse(userData);
     } catch (e) {
       console.error('Error loading session:', e);
+      discordAuth = null;
+      discordUser = null;
     }
   }
 
@@ -479,16 +500,37 @@
   }
 
   async function assignDiscordRole(userId) {
-    // In a real implementation, this would call your backend API
-    // to assign the Discord role to the user
+    // Simulation d'un appel API pour attribuer le rôle Discord
     console.log(`Assigning Discord role to user: ${userId}`);
     
-    // Simulate API call delay
+    // Simuler un délai d'appel API
     return new Promise(resolve => {
       setTimeout(() => {
         resolve(true);
       }, 2000);
     });
+  }
+
+  // Fonction pour cacher l'écran de chargement
+  function hideLoadingScreen() {
+    const loadingScreen = document.getElementById('loadingScreen');
+    if (loadingScreen) {
+      loadingScreen.classList.add('hidden');
+    }
+  }
+
+  // Fonction pour afficher une section
+  function showSection(sectionId) {
+    // Cacher toutes les sections
+    document.querySelectorAll('.card > div').forEach(section => {
+      section.classList.add('hidden');
+    });
+    
+    // Afficher la section demandée
+    const section = document.getElementById(sectionId);
+    if (section) {
+      section.classList.remove('hidden');
+    }
   }
 
   // Main initialization
@@ -499,16 +541,6 @@
     // Check URL parameters and authentication
     const urlParams = new URLSearchParams(window.location.search);
     const paymentCompleted = urlParams.get('payment_completed');
-    
-    // Hide loading screen and show main content
-    document.getElementById('loadingScreen').classList.add('hidden');
-    
-    // Check payment parameters - REQUIRED for access
-    if (!paymentCompleted || !paymentCompleted.startsWith('pi_')) {
-      // No valid payment parameters, show error
-      document.getElementById('errorSection').classList.remove('hidden');
-      return;
-    }
     
     // Parse Discord token from URL hash if present
     const parsedToken = parseImplicitToken();
@@ -531,10 +563,20 @@
       }
     }
     
+    // Hide loading screen
+    hideLoadingScreen();
+    
+    // Check payment parameters - REQUIRED for access
+    if (!paymentCompleted || !paymentCompleted.startsWith('pi_')) {
+      // No valid payment parameters, show error
+      showSection('errorSection');
+      return;
+    }
+    
     // Check if user is authenticated with Discord
     if (!isAuthenticated) {
       // Valid payment but not authenticated, show login prompt
-      document.getElementById('loginSection').classList.remove('hidden');
+      showSection('loginSection');
       document.getElementById('discordLoginBtn').addEventListener('click', function(e) {
         e.preventDefault();
         loginDiscord();
@@ -544,7 +586,7 @@
     
     // User is authenticated and has valid payment parameters
     // Show verification section
-    document.getElementById('verificationSection').classList.remove('hidden');
+    showSection('verificationSection');
     
     // Display user information
     document.getElementById('username').textContent = `${discordUser.username}#${discordUser.discriminator || '0'}`;
@@ -583,8 +625,7 @@
         
         if (success) {
           // Hide verification, show confirmation
-          document.getElementById('verificationSection').classList.add('hidden');
-          document.getElementById('confirmationSection').classList.remove('hidden');
+          showSection('confirmationSection');
         } else {
           alert('Erreur lors de l\'attribution du rôle. Veuillez réessayer.');
           this.textContent = 'Oui, c\'est moi';
@@ -610,6 +651,9 @@
       logout();
     });
   });
+
+  // Fallback: hide loading screen after 5 seconds if something goes wrong
+  setTimeout(hideLoadingScreen, 5000);
 </script>
 </body>
 </html>
