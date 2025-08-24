@@ -149,7 +149,7 @@ async function confirmStripePayment() {
   if (error) { 
     $('#paymentMessage').textContent = '❌ ' + error.message; 
   } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-    window.location.href = '/premium/purchase/success/confirm?payment_completed=' + encodeURIComponent(paymentIntent.id);
+    window.location.href = '/premium/purchase/success/comfirm?payment_completed=' + encodeURIComponent(paymentIntent.id);
   } else {
     $('#paymentMessage').textContent = 'Paiement non complété.';
   }
