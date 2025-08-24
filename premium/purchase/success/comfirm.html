@@ -36,21 +36,52 @@ body{
   align-items: center;
   min-height: 100vh;
 }
-/* stars background omitted for brevity, same as before */
-.wrap{ max-width:600px; margin:auto; padding:32px 20px; }
+
+/* étoiles background */
+.stars,.stars2,.stars3{position:fixed;top:0;left:0;width:100%;height:100%;background-repeat:repeat;background-size:contain;pointer-events:none;z-index:0}
+.stars{background-image:radial-gradient(#fff 0.5px,transparent 0.5px);background-size:2px 2px}
+.stars2{background-image:radial-gradient(#fff 0.7px,transparent 0.7px);background-size:3px 3px}
+.stars3{background-image:radial-gradient(#fff 1px,transparent 1px);background-size:4px 4px}
+
+.wrap{ max-width:600px; margin:auto; padding:32px 20px; position:relative; z-index:1; }
 .brand{ display:flex; align-items:center; gap:12px; justify-content: center; margin-bottom: 30px; }
 .logo{ width:60px; height:60px; border-radius:16px; background: radial-gradient(18px 14px at 14px 14px, #6de1ff 0%, #4cc2ff 35%, transparent 60%), conic-gradient(from 220deg,#6de1ff, #7c6dff, #eb6cff, #6de1ff); box-shadow: 0 0 30px rgba(109,225,255,.4), inset 0 0 0 2px rgba(255,255,255,.07); }
 h1{ font-size:28px; margin:0; letter-spacing:.3px; text-align: center; }
-.card{ background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding:40px 30px; border:1px solid rgba(255,255,255,.06); text-align: center; }
+.card{ background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding:40px 30px; border:1px solid rgba(255,255,255,.06); text-align: center; transition: all .3s ease; }
 .muted{ color:var(--muted) }
 .btn{ appearance:none; border:0; padding:12px 24px; border-radius:14px; font-weight:600; cursor:pointer; background: linear-gradient(180deg, #1d2a42, #141c2b); color:#eaf7ff; box-shadow: var(--shadow); transition: transform .05s ease, box-shadow .2s ease; margin-top: 20px; }
 .btn:hover{ box-shadow: 0 14px 36px rgba(109,225,255,.25), inset 0 0 0 1px var(--ring) }
 .btn:active{ transform: translateY(1px) }
 .btn.ok{ background: linear-gradient(180deg, #1f3a34, #122722) }
 .btn.secondary{ background: linear-gradient(180deg, #232b3b, #1a2230) }
-/* checkmark, confirmation, order-details, user-verification, etc. same as before */
+
+.hidden{display:none;}
+.checkmark-container{width:100px;height:100px;margin:auto;margin-bottom:20px}
+.checkmark-circle{fill:none;stroke:var(--ok);stroke-width:5;stroke-dasharray:283;stroke-dashoffset:283;animation:drawCircle .6s forwards;}
+.checkmark{fill:none;stroke:var(--ok);stroke-width:5;stroke-dasharray:100;stroke-dashoffset:100;animation:drawCheck 0.5s 0.6s forwards;}
+@keyframes drawCircle{to{stroke-dashoffset:0;}}
+@keyframes drawCheck{to{stroke-dashoffset:0;}}
+.order-details{margin-top:20px;text-align:left}
+.detail-row{display:flex;justify-content:space-between;padding:6px 0}
+.detail-label{color:var(--muted)}
+.user-verification{margin-top:20px;text-align:center}
+.user-info{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:12px}
+.user-avatar{width:50px;height:50px;border-radius:12px;background:var(--card-strong);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.user-avatar img{width:100%;height:100%;object-fit:cover}
+.user-avatar span{font-weight:700;font-size:18px;color:var(--accent)}
+.user-details{text-align:left}
+.username{font-weight:600}
+.user-id{font-size:12px;color:var(--muted)}
+.verification-buttons{display:flex;gap:10px;justify-content:center;margin-top:10px}
+.not-me{margin-top:10px;color:var(--muted);cursor:pointer;text-decoration:underline;font-size:13px}
+
 .footer{ opacity:.85; margin-top:40px; padding:16px; text-align:center; font-size:13px; color:var(--muted) }
-/* loading-screen, spinner, dots, login-btn, etc. same as before */
+.loading-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:999}
+.loading-spinner{border:4px solid rgba(255,255,255,.1);border-top:4px solid var(--accent);border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin-bottom:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{color:var(--text);font-weight:500;font-size:16px;text-align:center}
+.loading-dots::after{content:"...";animation:blink 1s steps(3,end) infinite}
+@keyframes blink{0%,20%{color:transparent}40%,100%{color:var(--text)}}
 </style>
 </head>
 <body>
@@ -84,10 +115,7 @@ h1{ font-size:28px; margin:0; letter-spacing:.3px; text-align: center; }
     <h2 style="margin-bottom: 20px;">Connexion requise</h2>
     <p class="muted">Veuillez vous connecter avec Discord pour confirmer votre achat.</p>
     <div class="login-prompt">
-      <a href="#" id="discordLoginBtn" class="discord-login-btn">
-        <!-- SVG icon omitted for brevity -->
-        Se connecter avec Discord
-      </a>
+      <a href="#" id="discordLoginBtn" class="btn">Se connecter avec Discord</a>
     </div>
   </div>
 
@@ -132,7 +160,6 @@ h1{ font-size:28px; margin:0; letter-spacing:.3px; text-align: center; }
       <div class="detail-row"><span class="detail-label">Date d'activation:</span><span class="detail-value" id="activationDate">—</span></div>
       <div class="detail-row"><span class="detail-label">Expiration:</span><span class="detail-value" id="expirationDate">—</span></div>
     </div>
-    <p class="note">Copiez votre clé de licence ci-dessus et utilisez-la pour activer votre abonnement. <a href="/" class="muted">Plus d'informations ici.</a></p>
     <button class="btn ok" onclick="window.location.href='/'">Retour à l'accueil</button>
   </div>
 
@@ -161,9 +188,7 @@ const db = firebase.firestore();
 const DISCORD = {
   CLIENT_ID: '1407764995671986249',
   REDIRECT_URI: window.location.origin + window.location.pathname,
-  SCOPES: ['identify','guilds.members.read'],
-  GUILD_ID: '1406489247543984240',
-  PREMIUM_ROLE_ID: '1406489247573086400'
+  SCOPES: ['identify','guilds.members.read']
 };
 
 let discordAuth = null;
@@ -208,7 +233,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   if(!paymentCompleted){const stored=getStoredPaymentCompleted(); if(stored){paymentCompleted=stored; const url=new URL(location.href); url.searchParams.set('payment_completed',stored); history.replaceState({},document.title,url.toString());}} else {storePaymentCompleted(paymentCompleted);}
   
   try {
-    // Vérification Firestore
     if(!paymentCompleted || !/^pi_[A-Za-z0-9_]+$/.test(paymentCompleted)){showOnly('errorSection'); return;}
     const paymentRef=db.collection('payments').doc(paymentCompleted);
     const paymentDoc=await paymentRef.get();
@@ -216,24 +240,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const paymentData=paymentDoc.data();
     if(paymentData.used){window.location.href='/'; return;}
     
-    // Vérification Discord
     if(!(discordAuth?.token)){showOnly('loginSection'); qs('#discordLoginBtn')?.addEventListener('click',e=>{e.preventDefault();loginDiscord(paymentCompleted);}); return;}
     if(!discordUser){try{await updateFromDiscord(discordAuth.token);}catch(e){sessionStorage.removeItem('nazapi_discord_auth'); showOnly('loginSection'); qs('#discordLoginBtn')?.addEventListener('click',ev=>{ev.preventDefault();loginDiscord(paymentCompleted);}); return;}}
     
-    // Affichage vérification utilisateur
     showOnly('verificationSection');
     qs('#username').textContent=`${discordUser.username}#${discordUser.discriminator||'0'}`;
     qs('#userId').textContent=`ID: ${discordUser.id}`;
     const avatarImage=qs('#avatarImage'); const avatarInitial=qs('#avatarInitial');
     if(discordUser.avatar){avatarImage.src=`https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`; avatarImage.style.display='block'; avatarInitial.style.display='none';} else {avatarImage.style.display='none'; avatarInitial.textContent=discordUser.username.charAt(0).toUpperCase(); avatarInitial.style.display='block';}
     
-    // Confirm button
     qs('#confirmButton')?.addEventListener('click', async function(){
       const btn=this; const original=btn.textContent; btn.textContent='Traitement…'; btn.disabled=true;
       try{
-        // Mise à jour Firestore
         await paymentRef.update({used:true, discordId:discordUser.id, usedAt:firebase.firestore.FieldValue.serverTimestamp()});
-        // Génération clé
         const licenseKey=generateLicenseKey();
         showOnly('confirmationSection');
         qs('#licenseKey').textContent=licenseKey;
