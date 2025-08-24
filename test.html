@@ -135,7 +135,6 @@
 <body>
 <div class="stars"></div><div class="stars2"></div><div class="stars3"></div>
 
-<!-- Loading Screen -->
 <div id="loadingScreen" class="loading-screen">
   <div class="loading-spinner"></div>
   <div class="loading-text">Chargement de NazAPI<span class="loading-dots"></span></div>
@@ -196,7 +195,6 @@
         <div id="roleAssignmentStatus" class="role-status hide"></div>
       </div>
       
-      <!-- Contact card -->
       <div class="contact-card">
         <div style="font-weight:700;margin-bottom:8px">Vous n'avez pas reçu votre clé?</div>
         <div class="muted" style="font-size:13px">Contactez-nous sur Discord pour obtenir de l'aide</div>
@@ -231,13 +229,12 @@
     </section>
   </div>
 
-  <!-- Vouch Section -->
   <section id="vouchSection" class="vouch-section hide">
     <h2 style="margin-bottom: 20px;">vouches de la communauté</h2>
     
     <div id="vouchForm" class="vouch-form hide">
       <h3 style="margin-bottom: 15px;">Laissez votre vouch</h3>
-      <textarea id="vouchText" placeholder="Partagez votre expérience avec NazAPI..." maxlength="150"></textarea>
+      <textarea id="vouchText" placeholder="Partagez votre expérience avec NazAPI..." maxlength="500"></textarea>
       <div id="vouchCharCount" class="char-count">0/500</div>
       <button id="submitVouch" class="btn" style="margin-top: 15px;">Publier le vouch</button>
     </div>
@@ -262,7 +259,6 @@
   <div class="muted" style="font-size:12px;margin-top:8px">Copiez cette clé et conservez-la en lieu sûr.</div>
 </div>
 
-<!-- Stripe Elements Popup (in-site, no redirect to Stripe page) -->
 <div id="paymentPopup" class="popup-payment">
   <div class="popup-content">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px; margin-bottom:6px;">
@@ -270,7 +266,7 @@
       <button id="closePaymentBtn" class="btn secondary" style="padding:8px 10px">Fermer</button>
     </div>
     <div class="muted" style="font-size:13px;margin-bottom:8px">Montant : <span class="ok-text">16,99 €</span></div>
-    <div id="payment-element"></div>
+    <div id="payment-element" style="padding: 8px; background: rgba(10,14,24,.6); border:1px solid rgba(255,255,255,.07); border-radius: 12px;"></div>
     <div id="paymentMessage" style="margin-top:10px"></div>
     <button id="confirmPaymentBtn" class="btn ok" style="margin-top:12px;width:100%">Payer 16,99 €</button>
   </div>
@@ -346,7 +342,7 @@ async function loadVouches() {
     const snapshot = await db.collection(VOUCHES_PATH).orderBy('createdAt', 'desc').limit(50).get();
     const vouchesContainer = $('#vouchList');
     vouchesContainer.innerHTML = '';
-    if (snapshot.empty) { vouchesContainer.innerHTML = '<div class="no-vouches">Aucun témoignage pour le moment.</div>'; return; }
+    if (snapshot.empty) { vouchesContainer.innerHTML = '<div class="no-vouches">Aucun vouch pour le moment.</div>'; return; }
     snapshot.forEach(doc => { vouchesContainer.appendChild(createVouchElement(doc.id, doc.data())); });
   } catch (error) {
     console.error('Error loading vouches:', error);
@@ -420,10 +416,13 @@ async function openStripePopupAndInitElements() {
 }
 async function confirmStripePayment() {
   $('#paymentMessage').textContent = 'Traitement du paiement...';
+  $('#confirmPaymentBtn').disabled = true;
   const { error, paymentIntent } = await stripe.confirmPayment({ elements, redirect: 'if_required' });
-  if (error) { $('#paymentMessage').textContent = '❌ ' + error.message; return; }
-  if (paymentIntent && paymentIntent.status === 'succeeded') {
-    // ✅ Redirect to success URL with payment_completed param (Stripe PI id)
+  $('#confirmPaymentBtn').disabled = false;
+
+  if (error) { 
+    $('#paymentMessage').textContent = '❌ ' + error.message; 
+  } else if (paymentIntent && paymentIntent.status === 'succeeded') {
     window.location.href = '/premium/purchase/success/confirm?payment_completed=' + encodeURIComponent(paymentIntent.id);
   } else {
     $('#paymentMessage').textContent = 'Paiement non complété.';
