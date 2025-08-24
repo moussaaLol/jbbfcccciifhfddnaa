@@ -128,7 +128,7 @@ async function openStripePopupAndInitElements() {
   $('#paymentMessage').textContent = '';
 
   // create PaymentIntent on your backend
-  const res = await fetch(STRIPE.CREATE_PAYMENT_INTENT_URL, { method: 'POST' });
+  const res = await fetch('/api/create-payment-intent', { method: 'POST' });
   if (!res.ok) { $('#paymentMessage').textContent = 'Erreur lors de la création du paiement.'; return null; }
   const data = await res.json();
   if (!data.clientSecret) { $('#paymentMessage').textContent = 'Client secret manquant.'; return null; }
