@@ -459,23 +459,25 @@ async function openStripePopupAndInitElements() {
   $('#paymentMessage').textContent = '';
 
   try {
-    // Simuler la création d'un PaymentIntent (dans un cas réel, appeler votre backend)
-    await sleep(1000); // Simuler un délai réseau
-    
-    // Dans une implémentation réelle, vous appelleriez votre backend:
-    // const res = await fetch('/api/create-payment-intent', { method: 'POST' });
-    // const data = await res.json();
-    
-    // Pour la démo, nous simulons une réponse réussie
-    const clientSecret = 'pi_3Rys3a1EC7Cm7d9G0abc1234_secret_xyz'; // Ceci serait récupéré de votre backend
-    
+    // Initialiser Stripe avec la clé publique
     stripe = Stripe(STRIPE.PUBLIC_KEY);
-    elements = stripe.elements({ clientSecret });
-    paymentElement = elements.create('payment');
+    
+    // Créer les éléments de paiement
+    elements = stripe.elements();
+    
+    // Créer et monter l'élément de paiement
+    paymentElement = elements.create('payment', {
+      layout: {
+        type: 'tabs',
+        defaultCollapsed: false,
+      }
+    });
+    
     paymentElement.mount('#payment-element');
     return true;
   } catch (e) {
-    $('#paymentMessage').textContent = 'Erreur lors de la création du paiement.';
+    $('#paymentMessage').textContent = 'Erreur lors de l\'initialisation du paiement.';
+    console.error('Stripe init error:', e);
     return false;
   }
 }
