@@ -341,8 +341,14 @@ async function loadVouches() {
   try {
     const snapshot = await db.collection(VOUCHES_PATH).orderBy('createdAt', 'desc').limit(50).get();
     const vouchesContainer = $('#vouchList');
+    // Clear the container first
     vouchesContainer.innerHTML = '';
-    if (snapshot.empty) { vouchesContainer.innerHTML = '<div class="no-vouches">Aucun vouch pour le moment.</div>'; return; }
+    // If no vouches, display the message and stop
+    if (snapshot.empty) {
+      vouchesContainer.innerHTML = '<div class="no-vouches">Aucun vouch pour le moment.</div>';
+      return;
+    }
+    // Otherwise, append the vouches
     snapshot.forEach(doc => { vouchesContainer.appendChild(createVouchElement(doc.id, doc.data())); });
   } catch (error) {
     console.error('Error loading vouches:', error);
