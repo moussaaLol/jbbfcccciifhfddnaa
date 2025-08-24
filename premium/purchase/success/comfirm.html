@@ -24,8 +24,8 @@
   body{
     margin:0; font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Inter,Arial;
     color:var(--text); background: radial-gradient(1200px 800px at 15% -10%,#16223a 0%,transparent 60%),
-                       radial-gradient(1000px 700px at 85% -5%,#1a2d4b 0%,transparent 60%),
-                       radial-gradient(1200px 900px at 50% 110%,#111a2a 0%,transparent 60%), var(--bg);
+            radial-gradient(1000px 700px at 85% -5%,#1a2d4b 0%,transparent 60%),
+            radial-gradient(1200px 900px at 50% 110%,#111a2a 0%,transparent 60%), var(--bg);
     background-attachment: fixed;
     overflow-y: auto;
     display: flex;
@@ -36,10 +36,10 @@
   .stars, .stars2, .stars3{
     position:fixed; inset:0; pointer-events:none; background-repeat:repeat; z-index:-1; opacity:.6;
     background-image: radial-gradient(1px 1px at 20px 30px,#fff,transparent 50%),
-                      radial-gradient(1px 1px at 80px 120px,#fff,transparent 50%),
-                      radial-gradient(1px 1px at 200px 80px,#fff,transparent 50%),
-                      radial-gradient(1px 1px at 320px 40px,#fff,transparent 50%),
-                      radial-gradient(1px 1px at 440px 160px,#fff,transparent 50%);
+              radial-gradient(1px 1px at 80px 120px,#fff,transparent 50%),
+              radial-gradient(1px 1px at 200px 80px,#fff,transparent 50%),
+              radial-gradient(1px 1px at 320px 40px,#fff,transparent 50%),
+              radial-gradient(1px 1px at 440px 160px,#fff,transparent 50%);
     animation: twinkle 16s linear infinite;
   }
   .stars2{ animation-duration:22s; opacity:.4; transform:scale(1.2) }
@@ -123,7 +123,6 @@
   </div>
 
   <div class="card" id="cardRoot">
-    <!-- Error -->
     <div id="errorSection" class="hidden">
       <div class="error-message">
         <h2>Accès non autorisé</h2>
@@ -132,7 +131,6 @@
       <button class="btn ok" onclick="window.location.href='/'">Retour à l'accueil</button>
     </div>
     
-    <!-- Login prompt -->
     <div id="loginSection" class="hidden">
       <h2 style="margin-bottom: 20px;">Connexion requise</h2>
       <p class="muted">Veuillez vous connecter avec Discord pour confirmer votre achat.</p>
@@ -146,7 +144,6 @@
       </div>
     </div>
     
-    <!-- Verification -->
     <div id="verificationSection" class="hidden">
       <h2 style="margin-bottom: 20px;">Confirmation de paiement</h2>
       <p class="muted">Nous avons besoin de confirmer votre identité pour finaliser votre achat.</p>
@@ -172,7 +169,6 @@
       </div>
     </div>
     
-    <!-- Confirmation -->
     <div id="confirmationSection" class="hidden">
       <div class="checkmark-container">
         <svg viewBox="0 0 100 100">
@@ -181,15 +177,15 @@
         </svg>
       </div>
       <div class="confirmation-text">Merci pour votre achat !</div>
-      <p class="muted">Votre abonnement Premium a été activé avec succès.</p>
+      <p class="muted">Voici votre clé de licence. Elle expire dans une heure si elle n'est pas utilisée.</p>
       <div class="order-details">
         <div class="detail-row"><span class="detail-label">Produit:</span><span class="detail-value">NazAPI Premium</span></div>
         <div class="detail-row"><span class="detail-label">Durée:</span><span class="detail-value">30 jours</span></div>
-        <div class="detail-row"><span class="detail-label">Prix:</span><span class="detail-value">16,99 €</span></div>
+        <div class="detail-row"><span class="detail-label">Clé de licence:</span><span class="detail-value" id="licenseKey">—</span></div>
         <div class="detail-row"><span class="detail-label">Date d'activation:</span><span class="detail-value" id="activationDate">—</span></div>
         <div class="detail-row"><span class="detail-label">Expiration:</span><span class="detail-value" id="expirationDate">—</span></div>
       </div>
-      <p class="note">Votre rôle Premium a été attribué sur Discord. Vous pouvez maintenant accéder à toutes les fonctionnalités exclusives.</p>
+      <p class="note">Copiez votre clé de licence ci-dessus et utilisez-la pour activer votre abonnement. <a href="/" class="muted">Plus d'informations ici.</a></p>
       <button class="btn ok" onclick="window.location.href='/'">Retour à l'accueil</button>
     </div>
   </div>
@@ -199,7 +195,24 @@
   </footer>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script>
+  // ====================
+  // Firebase Configuration
+  // ====================
+  const firebaseConfig = {
+    apiKey: "AIzaSyBtVmI_0_9qC6Cj5lmYgbwVJlW8lH11Ouw",
+    authDomain: "nazapi-fc74e.firebaseapp.com",
+    projectId: "nazapi-fc74e",
+    storageBucket: "nazapi-fc74e.firebasestorage.app",
+    messagingSenderId: "1011679210688",
+    appId: "1:1011679210688:web:eeccc40063f83b91e3d125",
+    measurementId: "G-522271ZX8N"
+  };
+  const app = firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  
   // ====================
   // Config
   // ====================
@@ -319,9 +332,24 @@
   // Simulated role assignment (replace with your backend call)
   async function assignDiscordRole(userId) {
     // TODO: call your real backend/cloud function here
+    // This is a placeholder for your Discord bot to handle the role assignment
     await new Promise(r => setTimeout(r, 1200));
     return true;
   }
+  
+  // --- NEW CODE ---
+  // A helper function to generate the license key
+  function generateLicenseKey() {
+      const crypto = window.crypto || window.msCrypto;
+      if (crypto) {
+          const arr = new Uint8Array(16);
+          crypto.getRandomValues(arr);
+          return Array.from(arr, byte => byte.toString(16).padStart(2, '0')).join('').toUpperCase();
+      }
+      return Math.random().toString(36).substring(2, 18).toUpperCase();
+  }
+
+  // --- END NEW CODE ---
 
   // ====================
   // Main
@@ -361,11 +389,29 @@
 
     // Always hide loader in the end
     try {
-      // Validate payment id
+      // --- NEW CODE: Check Firestore for payment existence and used status
       if (!paymentCompleted || !/^pi_[A-Za-z0-9_]+$/.test(paymentCompleted)) {
         showOnly('errorSection');
         return;
       }
+      
+      const paymentRef = db.collection('payments').doc(paymentCompleted);
+      const paymentDoc = await paymentRef.get();
+
+      if (!paymentDoc.exists) {
+        // If payment doesn't exist, show error
+        showOnly('errorSection');
+        return;
+      }
+
+      const paymentData = paymentDoc.data();
+      if (paymentData.used) {
+        // If payment is already used, redirect home
+        window.location.href = '/';
+        return;
+      }
+
+      // --- END NEW CODE ---
 
       // If not authenticated, ask for login
       const isAuthenticated = !!(discordAuth && discordAuth.token);
@@ -415,13 +461,6 @@
         avatarInitial.style.display = 'block';
       }
 
-      // Dates
-      const now = new Date();
-      const expiration = new Date(now.getTime() + 30*24*60*60*1000);
-      const options = { day: 'numeric', month: 'long', year: 'numeric' };
-      qs('#activationDate').textContent = now.toLocaleDateString('fr-FR', options);
-      qs('#expirationDate').textContent = expiration.toLocaleDateString('fr-FR', options);
-
       // Handlers
       const confirmBtn = qs('#confirmButton');
       if (confirmBtn) {
@@ -430,14 +469,29 @@
           this.textContent = 'Traitement…';
           this.disabled = true;
           try {
-            const ok = await assignDiscordRole(discordUser.id);
-            if (ok) {
-              showOnly('confirmationSection');
-            } else {
-              alert('Erreur lors de l’attribution du rôle. Veuillez réessayer.');
-              this.textContent = original;
-              this.disabled = false;
-            }
+            // --- NEW CODE: Update payment status and generate key
+            // Set 'used' to true in Firestore
+            await paymentRef.update({
+              used: true,
+              discordId: discordUser.id,
+              usedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Generate license key (this should ideally be a backend call)
+            const licenseKey = generateLicenseKey();
+            
+            // Show confirmation with key
+            showOnly('confirmationSection');
+            qs('#licenseKey').textContent = licenseKey;
+            
+            // Dates for confirmation screen
+            const now = new Date();
+            const expiration = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            qs('#activationDate').textContent = now.toLocaleDateString('fr-FR', options);
+            qs('#expirationDate').textContent = expiration.toLocaleDateString('fr-FR', options);
+            
+            // --- END NEW CODE ---
           } catch (e) {
             console.error(e);
             alert('Une erreur est survenue. Veuillez réessayer.');
