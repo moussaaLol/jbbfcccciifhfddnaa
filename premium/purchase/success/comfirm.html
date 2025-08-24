@@ -20,68 +20,36 @@
   --shadow: 0 10px 30px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.05);
   --radius: 18px;
 }
-html,body{height:100%}
-body{
-  margin:0;
-  font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Inter,Arial;
-  color:var(--text);
-  background: radial-gradient(1200px 800px at 15% -10%,#16223a 0%,transparent 60%),
-              radial-gradient(1000px 700px at 85% -5%,#1a2d4b 0%,transparent 60%),
-              radial-gradient(1200px 900px at 50% 110%,#111a2a 0%,transparent 60%),
-              var(--bg);
-  background-attachment: fixed;
-  overflow-y: auto;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-}
-
-/* étoiles background */
-.stars,.stars2,.stars3{position:fixed;top:0;left:0;width:100%;height:100%;background-repeat:repeat;background-size:contain;pointer-events:none;z-index:0}
-.stars{background-image:radial-gradient(#fff 0.5px,transparent 0.5px);background-size:2px 2px}
-.stars2{background-image:radial-gradient(#fff 0.7px,transparent 0.7px);background-size:3px 3px}
-.stars3{background-image:radial-gradient(#fff 1px,transparent 1px);background-size:4px 4px}
-
-.wrap{ max-width:600px; margin:auto; padding:32px 20px; position:relative; z-index:1; }
-.brand{ display:flex; align-items:center; gap:12px; justify-content: center; margin-bottom: 30px; }
+html,body{height:100%;margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Inter,Arial;color:var(--text);background: radial-gradient(1200px 800px at 15% -10%,#16223a 0%,transparent 60%),radial-gradient(1000px 700px at 85% -5%,#1a2d4b 0%,transparent 60%),radial-gradient(1200px 900px at 50% 110%,#111a2a 0%,transparent 60%), var(--bg);background-attachment: fixed;overflow-y: auto;display:flex;justify-content:center;align-items:center;}
+.stars, .stars2, .stars3{position:fixed; inset:0; pointer-events:none; background-repeat:repeat; z-index:-1; opacity:.6;background-image: radial-gradient(1px 1px at 20px 30px,#fff,transparent 50%),radial-gradient(1px 1px at 80px 120px,#fff,transparent 50%),radial-gradient(1px 1px at 200px 80px,#fff,transparent 50%),radial-gradient(1px 1px at 320px 40px,#fff,transparent 50%),radial-gradient(1px 1px at 440px 160px,#fff,transparent 50%);}
+.stars2{ animation: twinkle 22s linear infinite; opacity:.4; transform:scale(1.2) }
+.stars3{ animation: twinkle 30s linear infinite; opacity:.25; transform:scale(1.4) }
+@keyframes twinkle { 0%{filter:brightness(.9)} 50%{filter:brightness(1.1)} 100%{filter:brightness(.9)} }
+.wrap{ max-width:600px; width:90%; padding:32px 20px; }
+.brand{ display:flex; flex-direction:column; align-items:center; gap:12px; margin-bottom:30px; text-align:center;}
 .logo{ width:60px; height:60px; border-radius:16px; background: radial-gradient(18px 14px at 14px 14px, #6de1ff 0%, #4cc2ff 35%, transparent 60%), conic-gradient(from 220deg,#6de1ff, #7c6dff, #eb6cff, #6de1ff); box-shadow: 0 0 30px rgba(109,225,255,.4), inset 0 0 0 2px rgba(255,255,255,.07); }
-h1{ font-size:28px; margin:0; letter-spacing:.3px; text-align: center; }
-.card{ background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding:40px 30px; border:1px solid rgba(255,255,255,.06); text-align: center; transition: all .3s ease; }
-.muted{ color:var(--muted) }
-.btn{ appearance:none; border:0; padding:12px 24px; border-radius:14px; font-weight:600; cursor:pointer; background: linear-gradient(180deg, #1d2a42, #141c2b); color:#eaf7ff; box-shadow: var(--shadow); transition: transform .05s ease, box-shadow .2s ease; margin-top: 20px; }
-.btn:hover{ box-shadow: 0 14px 36px rgba(109,225,255,.25), inset 0 0 0 1px var(--ring) }
-.btn:active{ transform: translateY(1px) }
-.btn.ok{ background: linear-gradient(180deg, #1f3a34, #122722) }
-.btn.secondary{ background: linear-gradient(180deg, #232b3b, #1a2230) }
-
-.hidden{display:none;}
-.checkmark-container{width:100px;height:100px;margin:auto;margin-bottom:20px}
-.checkmark-circle{fill:none;stroke:var(--ok);stroke-width:5;stroke-dasharray:283;stroke-dashoffset:283;animation:drawCircle .6s forwards;}
-.checkmark{fill:none;stroke:var(--ok);stroke-width:5;stroke-dasharray:100;stroke-dashoffset:100;animation:drawCheck 0.5s 0.6s forwards;}
-@keyframes drawCircle{to{stroke-dashoffset:0;}}
-@keyframes drawCheck{to{stroke-dashoffset:0;}}
-.order-details{margin-top:20px;text-align:left}
-.detail-row{display:flex;justify-content:space-between;padding:6px 0}
-.detail-label{color:var(--muted)}
-.user-verification{margin-top:20px;text-align:center}
-.user-info{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:12px}
-.user-avatar{width:50px;height:50px;border-radius:12px;background:var(--card-strong);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
-.user-avatar img{width:100%;height:100%;object-fit:cover}
-.user-avatar span{font-weight:700;font-size:18px;color:var(--accent)}
-.user-details{text-align:left}
-.username{font-weight:600}
-.user-id{font-size:12px;color:var(--muted)}
-.verification-buttons{display:flex;gap:10px;justify-content:center;margin-top:10px}
-.not-me{margin-top:10px;color:var(--muted);cursor:pointer;text-decoration:underline;font-size:13px}
-
-.footer{ opacity:.85; margin-top:40px; padding:16px; text-align:center; font-size:13px; color:var(--muted) }
-.loading-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:999}
-.loading-spinner{border:4px solid rgba(255,255,255,.1);border-top:4px solid var(--accent);border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin-bottom:10px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-text{color:var(--text);font-weight:500;font-size:16px;text-align:center}
-.loading-dots::after{content:"...";animation:blink 1s steps(3,end) infinite}
-@keyframes blink{0%,20%{color:transparent}40%,100%{color:var(--text)}}
+h1{ font-size:28px; margin:0; letter-spacing:.3px; }
+.card{ background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); backdrop-filter: blur(10px); padding:40px 30px; border:1px solid rgba(255,255,255,.06); text-align:center; }
+.muted{ color:var(--muted); font-size:14px; }
+.btn{ appearance:none; border:0; padding:12px 24px; border-radius:14px; font-weight:600; cursor:pointer; background: linear-gradient(180deg, #1d2a42, #141c2b); color:#eaf7ff; box-shadow: var(--shadow); transition: transform .05s ease, box-shadow .2s ease; margin-top:20px; }
+.btn:hover{ box-shadow: 0 14px 36px rgba(109,225,255,.25), inset 0 0 0 1px var(--ring); }
+.btn:active{ transform: translateY(1px); }
+.btn.ok{ background: linear-gradient(180deg, #1f3a34, #122722); }
+.btn.secondary{ background: linear-gradient(180deg, #232b3b, #1a2230); }
+.footer{ opacity:.85; margin-top:40px; padding:16px; text-align:center; font-size:13px; color:var(--muted); }
+.hidden{ display:none !important; }
+.loading-screen{ position:fixed; inset:0; background:var(--bg); display:flex; justify-content:center; align-items:center; flex-direction:column; z-index:9999; }
+.loading-spinner{ width:50px;height:50px;border:3px solid rgba(109,225,255,.3);border-radius:50%;border-top-color:var(--accent);animation: spin 1s linear infinite;margin-bottom:20px; }
+@keyframes spin{ to{ transform: rotate(360deg) } }
+.checkmark-container{ width:100px; height:100px; margin:0 auto 20px; }
+.checkmark-circle{ fill:none; stroke:var(--ok); stroke-width:4; stroke-dasharray:283; stroke-dashoffset:283; animation: drawCircle 0.6s ease-out forwards; }
+.checkmark{ fill:none; stroke:var(--ok); stroke-width:4; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:100; stroke-dashoffset:100; animation: drawCheck 0.4s 0.6s ease-out forwards; }
+@keyframes drawCircle{ to{ stroke-dashoffset:0; } }
+@keyframes drawCheck{ to{ stroke-dashoffset:0; } }
+.order-details{ text-align:left; margin-top:20px; }
+.detail-row{ display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid rgba(255,255,255,.05);}
+.detail-label{ font-weight:600; }
+.not-me{ margin-top:10px; color:var(--accent); cursor:pointer; text-decoration:underline; font-size:13px; }
 </style>
 </head>
 <body>
@@ -89,186 +57,81 @@ h1{ font-size:28px; margin:0; letter-spacing:.3px; text-align: center; }
 
 <div id="loadingScreen" class="loading-screen">
   <div class="loading-spinner"></div>
-  <div class="loading-text">Vérification en cours<span class="loading-dots"></span></div>
+  <div class="loading-text">Vérification en cours…</div>
 </div>
 
 <div class="wrap">
-<div class="brand">
-  <div class="logo" aria-hidden="true"></div>
-  <div>
+  <div class="brand">
+    <div class="logo"></div>
     <h1>NazAPI • Confirmation</h1>
-    <div class="muted" style="font-size:13px; text-align: center;">Merci pour votre confiance</div>
+    <div class="muted">Merci pour votre confiance</div>
   </div>
-</div>
 
-<div class="card" id="cardRoot">
+  <div class="card" id="cardRoot">
 
-  <div id="errorSection" class="hidden">
-    <div class="error-message">
+    <div id="errorSection" class="hidden">
       <h2>Accès non autorisé</h2>
-      <p>Cette page est réservée aux utilisateurs ayant complété un paiement.</p>
+      <p class="muted">Cette page est réservée aux utilisateurs ayant complété un paiement.</p>
+      <button class="btn ok" onclick="window.location.href='/'">Retour à l'accueil</button>
     </div>
-    <button class="btn ok" onclick="window.location.href='/'">Retour à l'accueil</button>
-  </div>
 
-  <div id="loginSection" class="hidden">
-    <h2 style="margin-bottom: 20px;">Connexion requise</h2>
-    <p class="muted">Veuillez vous connecter avec Discord pour confirmer votre achat.</p>
-    <div class="login-prompt">
-      <a href="#" id="discordLoginBtn" class="btn">Se connecter avec Discord</a>
-    </div>
-  </div>
-
-  <div id="verificationSection" class="hidden">
-    <h2 style="margin-bottom: 20px;">Confirmation de paiement</h2>
-    <p class="muted">Nous avons besoin de confirmer votre identité pour finaliser votre achat.</p>
-    <div class="user-verification">
-      <div class="user-info">
-        <div class="user-avatar" id="userAvatar">
-          <img id="avatarImage" src="" alt="Avatar" onerror="this.style.display='none';">
-          <span id="avatarInitial">U</span>
-        </div>
-        <div class="user-details">
-          <div class="username" id="username">Utilisateur</div>
-          <div class="user-id" id="userId">ID: Chargement...</div>
-        </div>
+    <div id="loginSection" class="hidden">
+      <h2>Connexion requise</h2>
+      <p class="muted">Veuillez vous connecter avec Discord pour confirmer votre achat.</p>
+      <div style="margin-top:20px;">
+        <a href="#" id="discordLoginBtn" class="btn ok">Se connecter avec Discord</a>
       </div>
-      <div style="text-align: center;">
-        <div style="margin-bottom: 10px; font-weight: 500;">Est-ce vous ?</div>
-        <div class="verification-buttons">
+    </div>
+
+    <div id="verificationSection" class="hidden">
+      <h2>Confirmation de paiement</h2>
+      <p class="muted">Nous avons besoin de confirmer votre identité pour finaliser votre achat.</p>
+      <div style="margin-top:20px;">
+        <div class="user-info" style="display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:20px;">
+          <div style="width:60px;height:60px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;" id="avatarInitial">U</div>
+          <div>
+            <div id="username">Utilisateur</div>
+            <div class="muted" id="userId">ID: Chargement...</div>
+          </div>
+        </div>
+        <div style="text-align:center;">
+          <div style="margin-bottom:10px;font-weight:500;">Est-ce vous ?</div>
           <button class="btn ok" id="confirmButton">Oui, c'est moi</button>
           <button class="btn secondary" id="cancelButton">Non, ce n'est pas moi</button>
+          <div class="not-me" id="notMeLink">Non, déconnectez-moi</div>
         </div>
-        <div class="not-me" id="notMeLink">Non, déconnectez-moi</div>
       </div>
     </div>
+
+    <div id="confirmationSection" class="hidden">
+      <div class="checkmark-container">
+        <svg viewBox="0 0 100 100">
+          <circle class="checkmark-circle" cx="50" cy="50" r="45" />
+          <path class="checkmark" d="M30,50 L45,65 L70,35" />
+        </svg>
+      </div>
+      <div class="confirmation-text" style="margin-bottom:10px;">Merci pour votre achat !</div>
+      <p class="muted">Voici votre clé de licence. Elle expire dans une heure si elle n'est pas utilisée.</p>
+      <div class="order-details">
+        <div class="detail-row"><span class="detail-label">Produit:</span><span class="detail-value">NazAPI Premium</span></div>
+        <div class="detail-row"><span class="detail-label">Durée:</span><span class="detail-value">30 jours</span></div>
+        <div class="detail-row"><span class="detail-label">Clé de licence:</span><span class="detail-value" id="licenseKey">—</span></div>
+        <div class="detail-row"><span class="detail-label">Date d'activation:</span><span class="detail-value" id="activationDate">—</span></div>
+        <div class="detail-row"><span class="detail-label">Expiration:</span><span class="detail-value" id="expirationDate">—</span></div>
+      </div>
+      <p class="muted" style="margin-top:10px;">Copiez votre clé de licence ci-dessus et utilisez-la pour activer votre abonnement. <a href="/" class="muted">Plus d'informations ici.</a></p>
+      <button class="btn ok" onclick="window.location.href='/'">Retour à l'accueil</button>
+    </div>
+
   </div>
 
-  <div id="confirmationSection" class="hidden">
-    <div class="checkmark-container">
-      <svg viewBox="0 0 100 100">
-        <circle class="checkmark-circle" cx="50" cy="50" r="45" />
-        <path class="checkmark" d="M30,50 L45,65 L70,35" />
-      </svg>
-    </div>
-    <div class="confirmation-text">Merci pour votre achat !</div>
-    <p class="muted">Voici votre clé de licence. Elle expire dans une heure si elle n'est pas utilisée.</p>
-    <div class="order-details">
-      <div class="detail-row"><span class="detail-label">Produit:</span><span class="detail-value">NazAPI Premium</span></div>
-      <div class="detail-row"><span class="detail-label">Durée:</span><span class="detail-value">30 jours</span></div>
-      <div class="detail-row"><span class="detail-label">Clé de licence:</span><span class="detail-value" id="licenseKey">—</span></div>
-      <div class="detail-row"><span class="detail-label">Date d'activation:</span><span class="detail-value" id="activationDate">—</span></div>
-      <div class="detail-row"><span class="detail-label">Expiration:</span><span class="detail-value" id="expirationDate">—</span></div>
-    </div>
-    <button class="btn ok" onclick="window.location.href='/'">Retour à l'accueil</button>
-  </div>
-
-</div>
-
-<footer class="footer">
-  <div>© <span id="year"></span> NazAPI • <span class="muted">research services ✦</span></div>
-</footer>
+  <footer class="footer">© <span id="year"></span> NazAPI • <span class="muted">research services ✦</span></footer>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBtVmI_0_9qC6Cj5lmYgbwVJlW8lH11Ouw",
-  authDomain: "nazapi-fc74e.firebaseapp.com",
-  projectId: "nazapi-fc74e",
-  storageBucket: "nazapi-fc74e.firebasestorage.app",
-  messagingSenderId: "1011679210688",
-  appId: "1:1011679210688:web:eeccc40063f83b91e3d125",
-  measurementId: "G-522271ZX8N"
-};
-const app = firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-const DISCORD = {
-  CLIENT_ID: '1407764995671986249',
-  REDIRECT_URI: window.location.origin + window.location.pathname,
-  SCOPES: ['identify','guilds.members.read']
-};
-
-let discordAuth = null;
-let discordUser = null;
-
-const qs = sel => document.querySelector(sel);
-function hideLoadingScreen(){qs('#loadingScreen')?.classList.add('hidden');}
-function showOnly(sectionId){qs('#cardRoot')?.querySelectorAll(':scope > div').forEach(d=>d.classList.add('hidden')); qs('#'+sectionId)?.classList.remove('hidden');}
-function saveSession(){try{if(discordAuth)sessionStorage.setItem('nazapi_discord_auth',JSON.stringify(discordAuth)); if(discordUser)sessionStorage.setItem('nazapi_discord_user',JSON.stringify(discordUser));}catch{}}
-function loadSession(){try{const a=sessionStorage.getItem('nazapi_discord_auth'); const u=sessionStorage.getItem('nazapi_discord_user'); if(a)discordAuth=JSON.parse(a); if(u)discordUser=JSON.parse(u);}catch{}}
-function storePaymentCompleted(id){if(id)sessionStorage.setItem('nazapi_payment_completed',id);}
-function getStoredPaymentCompleted(){return sessionStorage.getItem('nazapi_payment_completed');}
-function parseImplicitTokenAndState(){if(!location.hash||!location.hash.startsWith('#'))return null; const h=new URLSearchParams(location.hash.slice(1)); const token=h.get('access_token'); if(!token)return null; const tokenType=h.get('token_type')||'Bearer'; const expires=Number(h.get('expires_in')||0); const state=h.get('state')||''; history.replaceState({},document.title,location.pathname+location.search); return {token,tokenType,expires,state};}
-async function fetchDiscordJSON(token,path){const r=await fetch(`https://discord.com/api${path}`,{headers:{Authorization:`Bearer ${token}`}}); if(!r.ok)throw new Error('Discord API error: '+r.status); return r.json();}
-function buildDiscordOAuthURL(extraState=''){const params=new URLSearchParams({client_id:DISCORD.CLIENT_ID,response_type:'token',redirect_uri:DISCORD.REDIRECT_URI,scope:DISCORD.SCOPES.join(' '),state:extraState}); return `https://discord.com/oauth2/authorize?${params.toString()}`;}
-function loginDiscord(paymentCompletedId){const pc=paymentCompletedId||getStoredPaymentCompleted()||new URLSearchParams(location.search).get('payment_completed')||''; storePaymentCompleted(pc); const state=pc?`pc=${encodeURIComponent(pc)}`:''; window.location.href=buildDiscordOAuthURL(state);}
-function logout(){discordAuth=null; discordUser=null; sessionStorage.removeItem('nazapi_discord_auth'); sessionStorage.removeItem('nazapi_discord_user'); window.location.href='/';}
-async function updateFromDiscord(token){discordUser=await fetchDiscordJSON(token,'/users/@me'); saveSession(); return true;}
-
-// ------------------
-// Générateur de clé identique à ton bot
-// ------------------
-function generateLicenseKey() {
-  const segments = [];
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  for(let i=0;i<5;i++){
-    let seg='';
-    for(let j=0;j<5;j++) seg+=chars.charAt(Math.floor(Math.random()*chars.length));
-    segments.push(seg);
-  }
-  return segments.join('-');
-}
-
-// ------------------
-// Main
-// ------------------
-document.addEventListener('DOMContentLoaded', async () => {
-  qs('#year').textContent = new Date().getFullYear();
-  let paymentCompleted = new URLSearchParams(location.search).get('payment_completed');
-  const parsed = parseImplicitTokenAndState();
-  if(parsed){discordAuth={token:parsed.token,tokenType:parsed.tokenType,expires:parsed.expires}; if(parsed.state?.startsWith('pc=')){const pc=decodeURIComponent(parsed.state.slice(3)); if(pc){storePaymentCompleted(pc); paymentCompleted=pc;}}}else{loadSession();}
-  if(!paymentCompleted){const stored=getStoredPaymentCompleted(); if(stored){paymentCompleted=stored; const url=new URL(location.href); url.searchParams.set('payment_completed',stored); history.replaceState({},document.title,url.toString());}} else {storePaymentCompleted(paymentCompleted);}
-  
-  try {
-    if(!paymentCompleted || !/^pi_[A-Za-z0-9_]+$/.test(paymentCompleted)){showOnly('errorSection'); return;}
-    const paymentRef=db.collection('payments').doc(paymentCompleted);
-    const paymentDoc=await paymentRef.get();
-    if(!paymentDoc.exists){showOnly('errorSection'); return;}
-    const paymentData=paymentDoc.data();
-    if(paymentData.used){window.location.href='/'; return;}
-    
-    if(!(discordAuth?.token)){showOnly('loginSection'); qs('#discordLoginBtn')?.addEventListener('click',e=>{e.preventDefault();loginDiscord(paymentCompleted);}); return;}
-    if(!discordUser){try{await updateFromDiscord(discordAuth.token);}catch(e){sessionStorage.removeItem('nazapi_discord_auth'); showOnly('loginSection'); qs('#discordLoginBtn')?.addEventListener('click',ev=>{ev.preventDefault();loginDiscord(paymentCompleted);}); return;}}
-    
-    showOnly('verificationSection');
-    qs('#username').textContent=`${discordUser.username}#${discordUser.discriminator||'0'}`;
-    qs('#userId').textContent=`ID: ${discordUser.id}`;
-    const avatarImage=qs('#avatarImage'); const avatarInitial=qs('#avatarInitial');
-    if(discordUser.avatar){avatarImage.src=`https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`; avatarImage.style.display='block'; avatarInitial.style.display='none';} else {avatarImage.style.display='none'; avatarInitial.textContent=discordUser.username.charAt(0).toUpperCase(); avatarInitial.style.display='block';}
-    
-    qs('#confirmButton')?.addEventListener('click', async function(){
-      const btn=this; const original=btn.textContent; btn.textContent='Traitement…'; btn.disabled=true;
-      try{
-        await paymentRef.update({used:true, discordId:discordUser.id, usedAt:firebase.firestore.FieldValue.serverTimestamp()});
-        const licenseKey=generateLicenseKey();
-        showOnly('confirmationSection');
-        qs('#licenseKey').textContent=licenseKey;
-        const now=new Date(); const expiration=new Date(now.getTime()+30*24*60*60*1000);
-        const options={day:'numeric',month:'long',year:'numeric'};
-        qs('#activationDate').textContent=now.toLocaleDateString('fr-FR',options);
-        qs('#expirationDate').textContent=expiration.toLocaleDateString('fr-FR',options);
-      }catch(e){console.error(e); alert('Erreur, réessayez.'); btn.textContent=original; btn.disabled=false;}
-    });
-
-    qs('#cancelButton')?.addEventListener('click',()=>loginDiscord(paymentCompleted));
-    qs('#notMeLink')?.addEventListener('click',logout);
-
-  }catch(err){console.error(err); showOnly('errorSection');} finally{hideLoadingScreen();}
-  setTimeout(hideLoadingScreen,5000);
-});
+const firebaseConfig = { apiKey: "AIzaSyBtVmI_0_9qC6Cj5lmYgbwVJlW8lH11Ouw", authDomain: "nazapi-fc74e.firebaseapp.com", projectId: "nazapi-fc74e", storageBucket: "nazapi-fc74e.firebasestorage.app", messagingSenderId: "1011679210688", appId: "1:1011679210688:web:eeccc40063f83b91e3d125", measurementId: "G-522271ZX8N" }; const app = firebase.initializeApp(firebaseConfig); const db = firebase.firestore(); const DISCORD = { CLIENT_ID: '1407764995671986249', REDIRECT_URI: window.location.origin + window.location.pathname, SCOPES: ['identify','guilds.members.read'], GUILD_ID: '1406489247543984240', PREMIUM_ROLE_ID: '1406489247573086400' }; let discordAuth = null; let discordUser = null; const qs = sel => document.querySelector(sel); function hideLoadingScreen(){qs('#loadingScreen')?.classList.add('hidden');} function showOnly(sectionId){qs('#cardRoot')?.querySelectorAll(':scope > div').forEach(d=>d.classList.add('hidden')); qs('#'+sectionId)?.classList.remove('hidden');} function saveSession(){try{if(discordAuth)sessionStorage.setItem('nazapi_discord_auth',JSON.stringify(discordAuth)); if(discordUser)sessionStorage.setItem('nazapi_discord_user',JSON.stringify(discordUser));}catch{}} function loadSession(){try{const a=sessionStorage.getItem('nazapi_discord_auth'); const u=sessionStorage.getItem('nazapi_discord_user'); if(a)discordAuth=JSON.parse(a); if(u)discordUser=JSON.parse(u);}catch{}} function storePaymentCompleted(id){if(id)sessionStorage.setItem('nazapi_payment_completed',id);} function getStoredPaymentCompleted(){return sessionStorage.getItem('nazapi_payment_completed');} function parseImplicitTokenAndState(){if(!location.hash||!location.hash.startsWith('#'))return null; const h=new URLSearchParams(location.hash.slice(1)); const token=h.get('access_token'); if(!token)return null; const tokenType=h.get('token_type')||'Bearer'; const expires=Number(h.get('expires_in')||0); const state=h.get('state')||''; history.replaceState({},document.title,location.pathname+location.search); return {token,tokenType,expires,state};} async function fetchDiscordJSON(token,path){const r=await fetch(https://discord.com/api${path},{headers:{Authorization:Bearer ${token}}}); if(!r.ok)throw new Error('Discord API error: '+r.status); return r.json();} function buildDiscordOAuthURL(extraState=''){const params=new URLSearchParams({client_id:DISCORD.CLIENT_ID,response_type:'token',redirect_uri:DISCORD.REDIRECT_URI,scope:DISCORD.SCOPES.join(' '),state:extraState}); return https://discord.com/oauth2/authorize?${params.toString()};} function loginDiscord(paymentCompletedId){const pc=paymentCompletedId||getStoredPaymentCompleted()||new URLSearchParams(location.search).get('payment_completed')||''; storePaymentCompleted(pc); const state=pc?pc=${encodeURIComponent(pc)}:''; window.location.href=buildDiscordOAuthURL(state);} function logout(){discordAuth=null; discordUser=null; sessionStorage.removeItem('nazapi_discord_auth'); sessionStorage.removeItem('nazapi_discord_user'); window.location.href='/';} async function updateFromDiscord(token){discordUser=await fetchDiscordJSON(token,'/users/@me'); saveSession(); return true;} // ------------------ // Générateur de clé identique à ton bot // ------------------ function generateLicenseKey() { const segments = []; const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; for(let i=0;i<5;i++){ let seg=''; for(let j=0;j<5;j++) seg+=chars.charAt(Math.floor(Math.random()*chars.length)); segments.push(seg); } return segments.join('-'); } // ------------------ // Main // ------------------ document.addEventListener('DOMContentLoaded', async () => { qs('#year').textContent = new Date().getFullYear(); let paymentCompleted = new URLSearchParams(location.search).get('payment_completed'); const parsed = parseImplicitTokenAndState(); if(parsed){discordAuth={token:parsed.token,tokenType:parsed.tokenType,expires:parsed.expires}; if(parsed.state?.startsWith('pc=')){const pc=decodeURIComponent(parsed.state.slice(3)); if(pc){storePaymentCompleted(pc); paymentCompleted=pc;}}}else{loadSession();} if(!paymentCompleted){const stored=getStoredPaymentCompleted(); if(stored){paymentCompleted=stored; const url=new URL(location.href); url.searchParams.set('payment_completed',stored); history.replaceState({},document.title,url.toString());}} else {storePaymentCompleted(paymentCompleted);} try { // Vérification Firestore if(!paymentCompleted || !/^pi_[A-Za-z0-9_]+$/.test(paymentCompleted)){showOnly('errorSection'); return;} const paymentRef=db.collection('payments').doc(paymentCompleted); const paymentDoc=await paymentRef.get(); if(!paymentDoc.exists){showOnly('errorSection'); return;} const paymentData=paymentDoc.data(); if(paymentData.used){window.location.href='/'; return;} // Vérification Discord if(!(discordAuth?.token)){showOnly('loginSection'); qs('#discordLoginBtn')?.addEventListener('click',e=>{e.preventDefault();loginDiscord(paymentCompleted);}); return;} if(!discordUser){try{await updateFromDiscord(discordAuth.token);}catch(e){sessionStorage.removeItem('nazapi_discord_auth'); showOnly('loginSection'); qs('#discordLoginBtn')?.addEventListener('click',ev=>{ev.preventDefault();loginDiscord(paymentCompleted);}); return;}} // Affichage vérification utilisateur showOnly('verificationSection'); qs('#username').textContent=${discordUser.username}#${discordUser.discriminator||'0'}; qs('#userId').textContent=ID: ${discordUser.id}; const avatarImage=qs('#avatarImage'); const avatarInitial=qs('#avatarInitial'); if(discordUser.avatar){avatarImage.src=https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png; avatarImage.style.display='block'; avatarInitial.style.display='none';} else {avatarImage.style.display='none'; avatarInitial.textContent=discordUser.username.charAt(0).toUpperCase(); avatarInitial.style.display='block';} // Confirm button qs('#confirmButton')?.addEventListener('click', async function(){ const btn=this; const original=btn.textContent; btn.textContent='Traitement…'; btn.disabled=true; try{ // Mise à jour Firestore await paymentRef.update({used:true, discordId:discordUser.id, usedAt:firebase.firestore.FieldValue.serverTimestamp()}); // Génération clé const licenseKey=generateLicenseKey(); showOnly('confirmationSection'); qs('#licenseKey').textContent=licenseKey; const now=new Date(); const expiration=new Date(now.getTime()+30*24*60*60*1000); const options={day:'numeric',month:'long',year:'numeric'}; qs('#activationDate').textContent=now.toLocaleDateString('fr-FR',options); qs('#expirationDate').textContent=expiration.toLocaleDateString('fr-FR',options); }catch(e){console.error(e); alert('Erreur, réessayez.'); btn.textContent=original; btn.disabled=false;} }); qs('#cancelButton')?.addEventListener('click',()=>loginDiscord(paymentCompleted)); qs('#notMeLink')?.addEventListener('click',logout); }catch(err){console.error(err); showOnly('errorSection');} finally{hideLoadingScreen();} setTimeout(hideLoadingScreen,5000); });
 </script>
 </body>
 </html>
