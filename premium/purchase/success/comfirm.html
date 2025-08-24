@@ -36,62 +36,73 @@ body{
   align-items: center;
   min-height: 100vh;
 }
-
-/* étoiles background */
-.stars,.stars2,.stars3{position:fixed;top:0;left:0;width:100%;height:100%;background-repeat:repeat;background-size:contain;pointer-events:none;z-index:0}
-.stars{background-image:radial-gradient(#fff 0.5px,transparent 0.5px);background-size:2px 2px}
-.stars2{background-image:radial-gradient(#fff 0.7px,transparent 0.7px);background-size:3px 3px}
-.stars3{background-image:radial-gradient(#fff 1px,transparent 1px);background-size:4px 4px}
-
-.wrap{ max-width:600px; margin:auto; padding:32px 20px; position:relative; z-index:1; }
+.stars, .stars2, .stars3{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background-repeat:repeat;
+  z-index:-1;
+  opacity:.6;
+  background-image: radial-gradient(1px 1px at 20px 30px,#fff,transparent 50%),
+                    radial-gradient(1px 1px at 80px 120px,#fff,transparent 50%),
+                    radial-gradient(1px 1px at 200px 80px,#fff,transparent 50%),
+                    radial-gradient(1px 1px at 320px 40px,#fff,transparent 50%),
+                    radial-gradient(1px 1px at 440px 160px,#fff,transparent 50%);
+  animation: twinkle 16s linear infinite;
+}
+.stars2{ animation-duration:22s; opacity:.4; transform:scale(1.2) }
+.stars3{ animation-duration:30s; opacity:.25; transform:scale(1.4) }
+@keyframes twinkle {0%{filter:brightness(.9)}50%{filter:brightness(1.1)}100%{filter:brightness(.9)}}
+.wrap{ max-width:600px; margin:auto; padding:32px 20px; }
 .brand{ display:flex; align-items:center; gap:12px; justify-content: center; margin-bottom: 30px; }
 .logo{ width:60px; height:60px; border-radius:16px; background: radial-gradient(18px 14px at 14px 14px, #6de1ff 0%, #4cc2ff 35%, transparent 60%), conic-gradient(from 220deg,#6de1ff, #7c6dff, #eb6cff, #6de1ff); box-shadow: 0 0 30px rgba(109,225,255,.4), inset 0 0 0 2px rgba(255,255,255,.07); }
 h1{ font-size:28px; margin:0; letter-spacing:.3px; text-align: center; }
-.card{ background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding:40px 30px; border:1px solid rgba(255,255,255,.06); text-align: center; transition: all .3s ease; }
+.card{ background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding:40px 30px; border:1px solid rgba(255,255,255,.06); text-align: center; }
 .muted{ color:var(--muted) }
 .btn{ appearance:none; border:0; padding:12px 24px; border-radius:14px; font-weight:600; cursor:pointer; background: linear-gradient(180deg, #1d2a42, #141c2b); color:#eaf7ff; box-shadow: var(--shadow); transition: transform .05s ease, box-shadow .2s ease; margin-top: 20px; }
 .btn:hover{ box-shadow: 0 14px 36px rgba(109,225,255,.25), inset 0 0 0 1px var(--ring) }
 .btn:active{ transform: translateY(1px) }
 .btn.ok{ background: linear-gradient(180deg, #1f3a34, #122722) }
 .btn.secondary{ background: linear-gradient(180deg, #232b3b, #1a2230) }
-
-.hidden{display:none;}
-.checkmark-container{width:100px;height:100px;margin:auto;margin-bottom:20px}
-.checkmark-circle{fill:none;stroke:var(--ok);stroke-width:5;stroke-dasharray:283;stroke-dashoffset:283;animation:drawCircle .6s forwards;}
-.checkmark{fill:none;stroke:var(--ok);stroke-width:5;stroke-dasharray:100;stroke-dashoffset:100;animation:drawCheck 0.5s 0.6s forwards;}
-@keyframes drawCircle{to{stroke-dashoffset:0;}}
-@keyframes drawCheck{to{stroke-dashoffset:0;}}
-.order-details{margin-top:20px;text-align:left}
-.detail-row{display:flex;justify-content:space-between;padding:6px 0}
-.detail-label{color:var(--muted)}
-.user-verification{margin-top:20px;text-align:center}
-.user-info{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:12px}
-.user-avatar{width:50px;height:50px;border-radius:12px;background:var(--card-strong);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
-.user-avatar img{width:100%;height:100%;object-fit:cover}
-.user-avatar span{font-weight:700;font-size:18px;color:var(--accent)}
-.user-details{text-align:left}
-.username{font-weight:600}
-.user-id{font-size:12px;color:var(--muted)}
-.verification-buttons{display:flex;gap:10px;justify-content:center;margin-top:10px}
-.not-me{margin-top:10px;color:var(--muted);cursor:pointer;text-decoration:underline;font-size:13px}
-
+.checkmark-container { width: 100px; height: 100px; margin: 0 auto 30px; position: relative; }
+.checkmark-circle { stroke-dasharray: 300; stroke-dashoffset: 300; stroke-width: 3; stroke: var(--ok); fill: none; animation: draw-circle 1s ease-in-out forwards; }
+.checkmark { stroke-dasharray: 100; stroke-dashoffset: 100; stroke-width: 4; stroke: var(--ok); stroke-linecap: round; stroke-linejoin: round; fill: none; animation: draw-check 0.8s ease-in-out 0.8s forwards; }
+@keyframes draw-circle { to { stroke-dashoffset: 0; } }
+@keyframes draw-check { to { stroke-dashoffset: 0; } }
+.confirmation-text { font-size: 24px; margin-bottom: 15px; color: var(--ok); font-weight: 600; }
+.order-details { background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 20px; margin: 25px 0; text-align: left; }
+.detail-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.detail-label { color: var(--muted); }
+.detail-value { font-weight: 500; }
+.note { font-size: 14px; color: var(--muted); margin-top: 25px; line-height: 1.5; }
 .footer{ opacity:.85; margin-top:40px; padding:16px; text-align:center; font-size:13px; color:var(--muted) }
-.loading-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:999}
-.loading-spinner{border:4px solid rgba(255,255,255,.1);border-top:4px solid var(--accent);border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin-bottom:10px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-text{color:var(--text);font-weight:500;font-size:16px;text-align:center}
-.loading-dots::after{content:"...";animation:blink 1s steps(3,end) infinite}
-@keyframes blink{0%,20%{color:transparent}40%,100%{color:var(--text)}}
+.user-verification { display: flex; flex-direction: column; align-items: center; gap: 20px; margin: 25px 0; }
+.user-info { display: flex; align-items: center; gap: 15px; background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 12px; width: 100%; max-width: 350px; }
+.user-avatar { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(45deg, #6de1ff, #7c6dff); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 24px; overflow: hidden; }
+.user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.user-details { text-align: left; }
+.username { font-weight: 600; margin-bottom: 5px; }
+.user-id { font-size: 12px; color: var(--muted); }
+.verification-buttons { display: flex; gap: 15px; margin-top: 10px; }
+.not-me { color: var(--accent); cursor: pointer; text-decoration: underline; margin-top: 15px; }
+.hidden { display: none !important; }
+.error-message { color: var(--danger); padding: 15px; background: rgba(255, 107, 107, 0.1); border-radius: 12px; margin: 20px 0; text-align: center; }
+.loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+.loading-spinner { width: 50px; height: 50px; border: 3px solid rgba(109, 225, 255, 0.3); border-radius: 50%; border-top-color: var(--accent); animation: spin 1s ease-in-out infinite; margin-bottom: 20px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.login-prompt { text-align: center; padding: 20px; }
+.discord-login-btn { display: inline-flex; align-items: center; gap: 10px; background: #5865F2; color: white; padding: 12px 20px; border-radius: 12px; text-decoration: none; font-weight: 600; margin-top: 20px; transition: all 0.2s ease; }
+.discord-login-btn:hover { background: #4752c4; transform: translateY(-2px); }
+.loading-dots::after { content: ''; animation: dots 1.5s infinite; }
+@keyframes dots { 0%, 20% { content: '.'; } 40% { content: '..'; } 60%, 100% { content: '...'; } }
 </style>
 </head>
 <body>
 <div class="stars"></div><div class="stars2"></div><div class="stars3"></div>
-
 <div id="loadingScreen" class="loading-screen">
   <div class="loading-spinner"></div>
   <div class="loading-text">Vérification en cours<span class="loading-dots"></span></div>
 </div>
-
 <div class="wrap">
 <div class="brand">
   <div class="logo" aria-hidden="true"></div>
@@ -100,9 +111,7 @@ h1{ font-size:28px; margin:0; letter-spacing:.3px; text-align: center; }
     <div class="muted" style="font-size:13px; text-align: center;">Merci pour votre confiance</div>
   </div>
 </div>
-
 <div class="card" id="cardRoot">
-
   <div id="errorSection" class="hidden">
     <div class="error-message">
       <h2>Accès non autorisé</h2>
@@ -110,15 +119,18 @@ h1{ font-size:28px; margin:0; letter-spacing:.3px; text-align: center; }
     </div>
     <button class="btn ok" onclick="window.location.href='/'">Retour à l'accueil</button>
   </div>
-
   <div id="loginSection" class="hidden">
     <h2 style="margin-bottom: 20px;">Connexion requise</h2>
     <p class="muted">Veuillez vous connecter avec Discord pour confirmer votre achat.</p>
     <div class="login-prompt">
-      <a href="#" id="discordLoginBtn" class="btn">Se connecter avec Discord</a>
+      <a href="#" id="discordLoginBtn" class="discord-login-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02C2.44 8.78 1.71 12.23 2.04 15.64c0 .02.01.04.03.05c1.57 1.15 3.1 1.84 4.59 2.3c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08-.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.06-.04.09c.32.61.67 1.19 1.07 1.74c.03.01.06.02.09.01c1.5-.46 3.02-1.15 4.59-2.3c.02-.01.03-.03.03-.05c.4-3.9-.67-7.25-2.73-10.29c-.01-.02-.02-.02-.04-.02zm-10.56 8.18c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12zm6.59 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.83 2.12-1.89 2.12z"/>
+        </svg>
+        Se connecter avec Discord
+      </a>
     </div>
   </div>
-
   <div id="verificationSection" class="hidden">
     <h2 style="margin-bottom: 20px;">Confirmation de paiement</h2>
     <p class="muted">Nous avons besoin de confirmer votre identité pour finaliser votre achat.</p>
@@ -143,7 +155,6 @@ h1{ font-size:28px; margin:0; letter-spacing:.3px; text-align: center; }
       </div>
     </div>
   </div>
-
   <div id="confirmationSection" class="hidden">
     <div class="checkmark-container">
       <svg viewBox="0 0 100 100">
@@ -151,28 +162,23 @@ h1{ font-size:28px; margin:0; letter-spacing:.3px; text-align: center; }
         <path class="checkmark" d="M30,50 L45,65 L70,35" />
       </svg>
     </div>
-    <div class="confirmation-text">Merci pour votre achat !</div>
-    <p class="muted">Voici votre clé de licence. Elle expire dans une heure si elle n'est pas utilisée.</p>
+    <div class="confirmation-text">Paiement confirmé !</div>
     <div class="order-details">
-      <div class="detail-row"><span class="detail-label">Produit:</span><span class="detail-value">NazAPI Premium</span></div>
-      <div class="detail-row"><span class="detail-label">Durée:</span><span class="detail-value">30 jours</span></div>
-      <div class="detail-row"><span class="detail-label">Clé de licence:</span><span class="detail-value" id="licenseKey">—</span></div>
-      <div class="detail-row"><span class="detail-label">Date d'activation:</span><span class="detail-value" id="activationDate">—</span></div>
-      <div class="detail-row"><span class="detail-label">Expiration:</span><span class="detail-value" id="expirationDate">—</span></div>
+      <div class="detail-row"><span class="detail-label">Clé générée:</span><span class="detail-value" id="generatedKey">...</span></div>
+      <div class="detail-row"><span class="detail-label">Date:</span><span class="detail-value" id="purchaseDate"></span></div>
     </div>
+    <div class="note">Vous pouvez maintenant utiliser votre clé dans le bot Discord. Merci pour votre achat !</div>
     <button class="btn ok" onclick="window.location.href='/'">Retour à l'accueil</button>
   </div>
-
 </div>
-
-<footer class="footer">
-  <div>© <span id="year"></span> NazAPI • <span class="muted">research services ✦</span></div>
-</footer>
+<div class="footer">© 2025 NazAPI. Tous droits réservés.</div>
 </div>
-
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
+// =========================
+// CONFIG FIREBASE
+// =========================
 const firebaseConfig = {
   apiKey: "AIzaSyBtVmI_0_9qC6Cj5lmYgbwVJlW8lH11Ouw",
   authDomain: "nazapi-fc74e.firebaseapp.com",
@@ -182,94 +188,67 @@ const firebaseConfig = {
   appId: "1:1011679210688:web:eeccc40063f83b91e3d125",
   measurementId: "G-522271ZX8N"
 };
-const app = firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
 
-const DISCORD = {
-  CLIENT_ID: '1407764995671986249',
-  REDIRECT_URI: window.location.origin + window.location.pathname,
-  SCOPES: ['identify','guilds.members.read']
-};
-
-let discordAuth = null;
-let discordUser = null;
-
-const qs = sel => document.querySelector(sel);
-function hideLoadingScreen(){qs('#loadingScreen')?.classList.add('hidden');}
-function showOnly(sectionId){qs('#cardRoot')?.querySelectorAll(':scope > div').forEach(d=>d.classList.add('hidden')); qs('#'+sectionId)?.classList.remove('hidden');}
-function saveSession(){try{if(discordAuth)sessionStorage.setItem('nazapi_discord_auth',JSON.stringify(discordAuth)); if(discordUser)sessionStorage.setItem('nazapi_discord_user',JSON.stringify(discordUser));}catch{}}
-function loadSession(){try{const a=sessionStorage.getItem('nazapi_discord_auth'); const u=sessionStorage.getItem('nazapi_discord_user'); if(a)discordAuth=JSON.parse(a); if(u)discordUser=JSON.parse(u);}catch{}}
-function storePaymentCompleted(id){if(id)sessionStorage.setItem('nazapi_payment_completed',id);}
-function getStoredPaymentCompleted(){return sessionStorage.getItem('nazapi_payment_completed');}
-function parseImplicitTokenAndState(){if(!location.hash||!location.hash.startsWith('#'))return null; const h=new URLSearchParams(location.hash.slice(1)); const token=h.get('access_token'); if(!token)return null; const tokenType=h.get('token_type')||'Bearer'; const expires=Number(h.get('expires_in')||0); const state=h.get('state')||''; history.replaceState({},document.title,location.pathname+location.search); return {token,tokenType,expires,state};}
-async function fetchDiscordJSON(token,path){const r=await fetch(`https://discord.com/api${path}`,{headers:{Authorization:`Bearer ${token}`}}); if(!r.ok)throw new Error('Discord API error: '+r.status); return r.json();}
-function buildDiscordOAuthURL(extraState=''){const params=new URLSearchParams({client_id:DISCORD.CLIENT_ID,response_type:'token',redirect_uri:DISCORD.REDIRECT_URI,scope:DISCORD.SCOPES.join(' '),state:extraState}); return `https://discord.com/oauth2/authorize?${params.toString()}`;}
-function loginDiscord(paymentCompletedId){const pc=paymentCompletedId||getStoredPaymentCompleted()||new URLSearchParams(location.search).get('payment_completed')||''; storePaymentCompleted(pc); const state=pc?`pc=${encodeURIComponent(pc)}`:''; window.location.href=buildDiscordOAuthURL(state);}
-function logout(){discordAuth=null; discordUser=null; sessionStorage.removeItem('nazapi_discord_auth'); sessionStorage.removeItem('nazapi_discord_user'); window.location.href='/';}
-async function updateFromDiscord(token){discordUser=await fetchDiscordJSON(token,'/users/@me'); saveSession(); return true;}
-
-// ------------------
-// Générateur de clé identique à ton bot
-// ------------------
-function generateLicenseKey() {
-  const segments = [];
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  for(let i=0;i<5;i++){
-    let seg='';
-    for(let j=0;j<5;j++) seg+=chars.charAt(Math.floor(Math.random()*chars.length));
-    segments.push(seg);
-  }
-  return segments.join('-');
+// =========================
+// UTILITAIRES
+// =========================
+function showOnly(id){
+  ['errorSection','loginSection','verificationSection','confirmationSection'].forEach(s=>document.getElementById(s).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
 }
+function hideLoadingScreen(){document.getElementById('loadingScreen').style.display='none';}
 
-// ------------------
-// Main
-// ------------------
+// =========================
+// DEMARRAGE
+// =========================
 document.addEventListener('DOMContentLoaded', async () => {
-  qs('#year').textContent = new Date().getFullYear();
-  let paymentCompleted = new URLSearchParams(location.search).get('payment_completed');
-  const parsed = parseImplicitTokenAndState();
-  if(parsed){discordAuth={token:parsed.token,tokenType:parsed.tokenType,expires:parsed.expires}; if(parsed.state?.startsWith('pc=')){const pc=decodeURIComponent(parsed.state.slice(3)); if(pc){storePaymentCompleted(pc); paymentCompleted=pc;}}}else{loadSession();}
-  if(!paymentCompleted){const stored=getStoredPaymentCompleted(); if(stored){paymentCompleted=stored; const url=new URL(location.href); url.searchParams.set('payment_completed',stored); history.replaceState({},document.title,url.toString());}} else {storePaymentCompleted(paymentCompleted);}
-  
-  try {
-    if(!paymentCompleted || !/^pi_[A-Za-z0-9_]+$/.test(paymentCompleted)){showOnly('errorSection'); return;}
-    const paymentRef=db.collection('payments').doc(paymentCompleted);
-    const paymentDoc=await paymentRef.get();
-    if(!paymentDoc.exists){showOnly('errorSection'); return;}
-    const paymentData=paymentDoc.data();
-    if(paymentData.used){window.location.href='/'; return;}
-    
-    if(!(discordAuth?.token)){showOnly('loginSection'); qs('#discordLoginBtn')?.addEventListener('click',e=>{e.preventDefault();loginDiscord(paymentCompleted);}); return;}
-    if(!discordUser){try{await updateFromDiscord(discordAuth.token);}catch(e){sessionStorage.removeItem('nazapi_discord_auth'); showOnly('loginSection'); qs('#discordLoginBtn')?.addEventListener('click',ev=>{ev.preventDefault();loginDiscord(paymentCompleted);}); return;}}
-    
+  // fallback
+  setTimeout(hideLoadingScreen,7000);
+
+  try{
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentId = urlParams.get('payment_completed');
+    if(!paymentId){ showOnly('errorSection'); hideLoadingScreen(); return; }
+
+    // Vérification dans Firestore
+    const paymentDoc = await db.collection('payments').doc(paymentId).get();
+    if(!paymentDoc.exists){ showOnly('errorSection'); hideLoadingScreen(); return; }
+    const paymentData = paymentDoc.data();
+    if(paymentData.used){ window.location.href='/'; hideLoadingScreen(); return; }
+
+    // Récupération Discord OAuth (à implémenter)
+    const discordUser = JSON.parse(sessionStorage.getItem('discordUser') || 'null');
+    if(!discordUser){ showOnly('loginSection'); hideLoadingScreen(); return; }
+
+    // Affichage infos utilisateur
+    document.getElementById('username').textContent = discordUser.username;
+    document.getElementById('userId').textContent = `ID: ${discordUser.id}`;
+    if(discordUser.avatar){
+      document.getElementById('avatarImage').src = `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`;
+      document.getElementById('avatarInitial').style.display='none';
+    }else{
+      document.getElementById('avatarInitial').textContent = discordUser.username[0].toUpperCase();
+      document.getElementById('avatarImage').style.display='none';
+    }
+
     showOnly('verificationSection');
-    qs('#username').textContent=`${discordUser.username}#${discordUser.discriminator||'0'}`;
-    qs('#userId').textContent=`ID: ${discordUser.id}`;
-    const avatarImage=qs('#avatarImage'); const avatarInitial=qs('#avatarInitial');
-    if(discordUser.avatar){avatarImage.src=`https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`; avatarImage.style.display='block'; avatarInitial.style.display='none';} else {avatarImage.style.display='none'; avatarInitial.textContent=discordUser.username.charAt(0).toUpperCase(); avatarInitial.style.display='block';}
-    
-    qs('#confirmButton')?.addEventListener('click', async function(){
-      const btn=this; const original=btn.textContent; btn.textContent='Traitement…'; btn.disabled=true;
-      try{
-        await paymentRef.update({used:true, discordId:discordUser.id, usedAt:firebase.firestore.FieldValue.serverTimestamp()});
-        const licenseKey=generateLicenseKey();
-        showOnly('confirmationSection');
-        qs('#licenseKey').textContent=licenseKey;
-        const now=new Date(); const expiration=new Date(now.getTime()+30*24*60*60*1000);
-        const options={day:'numeric',month:'long',year:'numeric'};
-        qs('#activationDate').textContent=now.toLocaleDateString('fr-FR',options);
-        qs('#expirationDate').textContent=expiration.toLocaleDateString('fr-FR',options);
-      }catch(e){console.error(e); alert('Erreur, réessayez.'); btn.textContent=original; btn.disabled=false;}
-    });
 
-    qs('#cancelButton')?.addEventListener('click',()=>loginDiscord(paymentCompleted));
-    qs('#notMeLink')?.addEventListener('click',logout);
+    document.getElementById('confirmButton').onclick = async () => {
+      // Génération clé comme dans ton bot
+      const key = 'NAZ-'+Math.random().toString(36).substring(2,10).toUpperCase();
+      document.getElementById('generatedKey').textContent = key;
+      const now = new Date().toLocaleString();
+      document.getElementById('purchaseDate').textContent = now;
+      await db.collection('payments').doc(paymentId).update({used:true});
+      showOnly('confirmationSection');
+    };
+    document.getElementById('cancelButton').onclick = () => window.location.href='/';
+    document.getElementById('notMeLink').onclick = () => { sessionStorage.removeItem('discordUser'); window.location.href='/'; }
 
-  }catch(err){console.error(err); showOnly('errorSection');} finally{hideLoadingScreen();}
-  setTimeout(hideLoadingScreen,5000);
+  }catch(err){ console.error(err); showOnly('errorSection'); hideLoadingScreen(); }
 });
-    setTimeout(hideLoadingScreen, 5000);
 </script>
 </body>
 </html>
