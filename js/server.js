@@ -251,7 +251,7 @@ async function assignDiscordRole(userId) {
   } catch (error) {
     console.error('Error assigning Discord role:', error);
     const statusElement = $('#roleAssignmentStatus');
-    statusElement.classList.remove('updating'); statusElement.classList.add('error'); statusElement.textContent = '❌ Erreur lors de l\\'attribution du rôle Discord. Contactez-nous.';
+    statusElement.classList.remove('updating'); statusElement.classList.add('error'); statusElement.textContent = '❌ Erreur lors de l\'attribution du rôle Discord. Contactez-nous.';
     return false;
   }
 }
