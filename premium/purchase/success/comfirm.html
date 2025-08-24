@@ -436,7 +436,6 @@
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!r.ok) {
-        // If the token is invalid, throw a specific error
         if (r.status === 401) {
           throw new Error('Invalid token');
         }
@@ -498,7 +497,6 @@
     } catch (e) {
       console.error('Error updating from Discord:', e);
       if (e.message === 'Invalid token') {
-        // Specific handling for invalid tokens
         return false;
       }
       return false;
@@ -506,10 +504,8 @@
   }
 
   async function assignDiscordRole(userId) {
-    // Simulation d'un appel API pour attribuer le rôle Discord
     console.log(`Assigning Discord role to user: ${userId}`);
     
-    // Simuler un délai d'appel API
     return new Promise(resolve => {
       setTimeout(() => {
         resolve(true);
@@ -517,7 +513,6 @@
     });
   }
 
-  // Fonction pour cacher l'écran de chargement
   function hideLoadingScreen() {
     const loadingScreen = document.getElementById('loadingScreen');
     if (loadingScreen) {
@@ -525,72 +520,56 @@
     }
   }
 
-  // Fonction pour afficher une section
   function showSection(sectionId) {
-    // Cacher toutes les sections
     document.querySelectorAll('.card > div').forEach(section => {
       section.classList.add('hidden');
     });
     
-    // Afficher la section demandée
     const section = document.getElementById(sectionId);
     if (section) {
       section.classList.remove('hidden');
     }
   }
 
-  // Main initialization
   document.addEventListener('DOMContentLoaded', async function() {
-    // Set current year in footer
     document.getElementById('year').textContent = new Date().getFullYear();
     
-    // Check URL parameters and authentication
     const urlParams = new URLSearchParams(window.location.search);
     const paymentCompleted = urlParams.get('payment_completed');
     
-    // Parse Discord token from URL hash if present
     const parsedToken = parseImplicitToken();
     if (parsedToken) {
       discordAuth = parsedToken;
-      saveSession(); // Save the new token immediately
+      saveSession();
     } else {
       loadSession();
     }
     
-    // Check if user is authenticated with Discord
     const isAuthenticated = discordAuth && discordAuth.token;
     
-    // If we have a Discord token, try to get user data
     if (isAuthenticated && !discordUser) {
       const success = await updateFromDiscord(discordAuth.token);
       if (!success) {
-        // Token is invalid, clear it
         discordAuth = null;
         localStorage.removeItem('nazapi_discord_auth');
       }
     }
     
-    // Start the main logic flow
     if (!paymentCompleted || !paymentCompleted.startsWith('pi_')) {
-      // No valid payment parameters, show error
       showSection('errorSection');
     } else if (!discordAuth) {
-      // Valid payment but not authenticated, show login prompt
       showSection('loginSection');
       document.getElementById('discordLoginBtn').addEventListener('click', function(e) {
         e.preventDefault();
         loginDiscord();
       });
     } else {
-      // User is authenticated and has valid payment parameters
       showSection('verificationSection');
       
-      // Display user information
       if (discordUser) {
         document.getElementById('username').textContent = `${discordUser.username}`;
         document.getElementById('userId').textContent = `ID: ${discordUser.id}`;
         
-        // Set avatar
         const avatarImage = document.getElementById('avatarImage');
         const avatarInitial = document.getElementById('avatarInitial');
         
@@ -602,7 +581,6 @@
           avatarInitial.textContent = discordUser.username.charAt(0).toUpperCase();
         }
       } else {
-        // If user data fetch failed, prompt for login again
         showSection('loginSection');
         document.getElementById('discordLoginBtn').addEventListener('click', function(e) {
           e.preventDefault();
@@ -610,7 +588,6 @@
         });
       }
 
-      // Set dates
       const now = new Date();
       const expiration = new Date();
       expiration.setDate(expiration.getDate() + 30);
@@ -619,18 +596,14 @@
       document.getElementById('activationDate').textContent = now.toLocaleDateString('fr-FR', options);
       document.getElementById('expirationDate').textContent = expiration.toLocaleDateString('fr-FR', options);
       
-      // Confirm button handler
       document.getElementById('confirmButton').addEventListener('click', async function() {
-        // Show loading state
         this.textContent = 'Traitement...';
         this.disabled = true;
         
         try {
-          // Assign Discord role
           const success = await assignDiscordRole(discordUser.id);
           
           if (success) {
-            // Hide verification, show confirmation
             showSection('confirmationSection');
           } else {
             alert('Erreur lors de l\'attribution du rôle. Veuillez réessayer.');
@@ -645,18 +618,15 @@
         }
       });
       
-      // Cancel button handler - reauthenticate
       document.getElementById('cancelButton').addEventListener('click', function() {
         logout();
       });
       
-      // Not me link handler - logout
       document.getElementById('notMeLink').addEventListener('click', function() {
         logout();
       });
     }
     
-    // Hide loading screen at the end, regardless of the outcome
     hideLoadingScreen();
   });
 </script>
