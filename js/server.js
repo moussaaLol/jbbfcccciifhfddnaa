@@ -1,4 +1,3 @@
-
 /** =========================
  * TODO — PARAMÈTRES À RENSEIGNER
  * ========================= */
@@ -14,8 +13,8 @@ const DISCORD = {
 
 // ✅ Stripe Elements config (no redirect to Stripe page)
 const STRIPE = {
-  PUBLIC_KEY: 'pk_test_51Rys3a1EC7Cm7d9GpJkkTiJHhlAdD4aaRmKYvaAQownN4JmUK6R18VMB8K6RJ94iC5F6hxMarSCvv5lLc55zjlIF00wrJIQC07',
-  CREATE_PAYMENT_INTENT_URL: '/create-payment-intent'
+  PUBLIC_KEY: 'pk_test_51Rys3a1EC7Cm7d9GpJkkTiJHhlAdD4aaRmKYvaAQownN4JmUK6R18VMB8K6RJ94iC5F6hxMarSCvv5lLc55zjlIF00wrJIQC07',              // <-- remplace par ta clé publique Stripe
+  CREATE_PAYMENT_INTENT_URL: '/create-payment-intent' // <-- endpoint backend qui renvoie {clientSecret}
 };
 
 const FIREBASE_CFG = {
@@ -56,17 +55,69 @@ const auth = firebase.auth();
 const functions = firebase.functions();
 
 /** =========================
+ * STRIPE SUCCESS HANDLER (sauvegarde payment_completed=pi_xxx)
+ * ========================= */
+async function handleStripeSuccess() {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentId = urlParams.get("payment_completed");
+    if (!paymentId) return; // rien à faire
+
+    // Récupère info utilisateur si déjà connecté (peut être null)
+    const userId = discordUser?.id || null;
+    const userName = discordUser ? `${discordUser.username}#${discordUser.discriminator || '0'}` : null;
+
+    // On utilise merge:true pour ne pas écraser si le doc existe déjà
+    await db.collection("payments").doc(paymentId).set({
+      paymentId: paymentId,
+      used: false,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      userId: userId,
+      userName: userName
+    }, { merge: true });
+
+    console.log("✅ Paiement enregistré via param URL dans Firestore:", paymentId);
+    // Optionnel: afficher notification dans l'UI
+    try { 
+      const msgEl = document.getElementById('paymentMessage');
+      if (msgEl) msgEl.textContent = '✅ Paiement confirmé et enregistré.';
+    } catch (e) {}
+  } catch (err) {
+    console.error("Erreur handleStripeSuccess:", err);
+  }
+}
+
+/** utilitaire : marquer un paiement comme utilisé */
+async function markPaymentAsUsed(paymentId) {
+  if (!paymentId) throw new Error('paymentId requis');
+  try {
+    await db.collection("payments").doc(paymentId).update({
+      used: true,
+      usedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    console.log('✅ Paiement marqué comme used:', paymentId);
+    return true;
+  } catch (err) {
+    console.error('Erreur markPaymentAsUsed:', err);
+    return false;
+  }
+}
+
+/** =========================
  * VOUCH SYSTEM
  * ========================= */
 async function loadVouches() {
   try {
     const snapshot = await db.collection(VOUCHES_PATH).orderBy('createdAt', 'desc').limit(50).get();
     const vouchesContainer = $('#vouchList');
+    // Clear the container first
     vouchesContainer.innerHTML = '';
+    // If no vouches, display the message and stop
     if (snapshot.empty) {
       vouchesContainer.innerHTML = '<div class="no-vouches">Aucun vouch pour le moment.</div>';
       return;
     }
+    // Otherwise, append the vouches
     snapshot.forEach(doc => { vouchesContainer.appendChild(createVouchElement(doc.id, doc.data())); });
   } catch (error) {
     console.error('Error loading vouches:', error);
@@ -121,12 +172,17 @@ function setupVouchCharacterCounter() { const textarea = $('#vouchText'); const 
  * ========================= */
 let stripe, elements, paymentElement;
 async function openStripePopupAndInitElements() {
+  // show popup
   $('#paymentPopup').style.display = 'flex';
   $('#paymentMessage').textContent = '';
+
+  // create PaymentIntent on your backend
   const res = await fetch('/api/create-payment-intent', { method: 'POST' });
   if (!res.ok) { $('#paymentMessage').textContent = 'Erreur lors de la création du paiement.'; return null; }
   const data = await res.json();
   if (!data.clientSecret) { $('#paymentMessage').textContent = 'Client secret manquant.'; return null; }
+
+  // init Elements with the clientSecret
   stripe = Stripe(STRIPE.PUBLIC_KEY);
   elements = stripe.elements({ clientSecret: data.clientSecret });
   paymentElement = elements.create('payment');
@@ -142,31 +198,31 @@ async function confirmStripePayment() {
   if (error) { 
     $('#paymentMessage').textContent = '❌ ' + error.message; 
   } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+
+    // 🟦 Sauvegarde immédiate côté client (si utilisateur connecté) - protège avec merge pour éviter d'écraser
+    try {
+      const paymentId = paymentIntent.id;
+      const userId = discordUser?.id || null;
+      const userName = discordUser ? `${discordUser.username}#${discordUser.discriminator || '0'}` : null;
+      await db.collection("payments").doc(paymentId).set({
+        paymentId: paymentId,
+        payment_confirmed: true,
+        used: false,
+        amount: (paymentIntent.amount != null ? paymentIntent.amount / 100 : null),
+        currency: paymentIntent.currency || null,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        userId: userId,
+        userName: userName
+      }, { merge: true });
+      console.log("🔥 Paiement sauvegardé dans Firestore (confirmStripePayment) !");
+    } catch (err) {
+      console.error("Erreur Firestore lors de la sauvegarde après paiement:", err);
+    }
+
+    // Redirection vers la page de succès (tu as déjà cette route)
     window.location.href = '/premium/purchase/success/comfirm?payment_completed=' + encodeURIComponent(paymentIntent.id);
   } else {
     $('#paymentMessage').textContent = 'Paiement non complété.';
-  }
-}
-
-/** =========================
- * STRIPE SUCCESS HANDLER
- * ========================= */
-async function handleStripeSuccess() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const paymentId = urlParams.get("payment_completed");
-  if (!paymentId) return;
-
-  try {
-    await db.collection("payments").doc(paymentId).set({
-      id: paymentId,
-      used: false,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      userId: discordUser?.id || null,
-      userName: discordUser ? `${discordUser.username}#${discordUser.discriminator || '0'}` : null
-    });
-    console.log("✅ Paiement enregistré dans Firestore:", paymentId);
-  } catch (err) {
-    console.error("❌ Erreur enregistrement Firestore:", err);
   }
 }
 
@@ -195,7 +251,7 @@ async function assignDiscordRole(userId) {
   } catch (error) {
     console.error('Error assigning Discord role:', error);
     const statusElement = $('#roleAssignmentStatus');
-    statusElement.classList.remove('updating'); statusElement.classList.add('error'); statusElement.textContent = '❌ Erreur lors de l\'attribution du rôle Discord. Contactez-nous.';
+    statusElement.classList.remove('updating'); statusElement.classList.add('error'); statusElement.textContent = '❌ Erreur lors de l\\'attribution du rôle Discord. Contactez-nous.';
     return false;
   }
 }
@@ -284,6 +340,7 @@ async function updateFromDiscord(token) {
 }
 function logout(){ discordAuth = discordUser = discordMember = null; saveSession(); setLoggedOutUI(); }
 
+// 🟦 BUY BUTTON -> open Stripe Elements popup
 async function handleBuy() {
   try {
     showLoadingScreen('Initialisation du paiement...');
@@ -305,44 +362,57 @@ async function activateExistingKeyForUser(key) {
   const docRef = snap.docs[0].ref; const data = snap.docs[0].data();
   if (data.status !== 'unused') throw new Error('Clé déjà activée ou expirée');
   if (data.unusedExpiresAt && data.unusedExpiresAt <= Date.now()) { await docRef.update({ status: 'expired' }); throw new Error('Clé expirée (non utilisée à temps)'); }
-  const q2 = { status: 'used', activatedBy: discordUser.id, activatedAt: Date.now() };
-  await docRef.update(q2);
-  return { key: data.key, name: data.name, expiresAt: data.expiresAt };
+  const q2 = await db.collection(LICENSES_PATH).where('activatedBy','==', discordUser.id).where('status','==','active').get();
+  if (!q2.empty) throw new Error('Vous avez déjà une licence active');
+  await docRef.update({ status:'active', activatedBy: discordUser.id, activatedAt: Date.now() });
+  await assignDiscordRole(discordUser.id);
+  return { ...data, status:'active', activatedBy: discordUser.id };
 }
 
 /** =========================
- * INITIALISATION
+ * CLOUD FUNCTION SEARCH
  * ========================= */
-async function init() {
-  loadSession();
-
-  // Si l'utilisateur a un token Discord dans l'URL (implicit grant)
-  const implicitToken = parseImplicitToken();
-  if (implicitToken) {
-    discordAuth = implicitToken;
-    await updateFromDiscord(discordAuth.token);
-  } else if (discordAuth?.token) {
-    await updateFromDiscord(discordAuth.token);
-  } else {
-    setLoggedOutUI();
-  }
-
-  // Vérification d'un paiement réussi dans l'URL
-  await handleStripeSuccess();
-
-  setupVouchCharacterCounter();
-
-  // Événements UI
-  loginBtn.onclick = loginDiscord;
-  logoutBtn.onclick = logout;
-  $('#submitVouch').onclick = submitVouch;
-  $('#buyPremiumBtn').onclick = handleBuy;
-  $('#confirmPaymentBtn').onclick = confirmStripePayment;
-
-  console.log('✅ Application initialisée.');
+async function runSearch(term){
+  if (!term || term.trim().length < 2) { progress.textContent = 'Terme trop court.'; return; }
+  results.innerHTML = ''; progress.textContent = 'Recherche en cours...';
+  try { const searchFunction = functions.httpsCallable('searchFiles'); const response = await searchFunction({ query: term }); const found = response.data.results; if (!found || found.length === 0) { progress.textContent = `Aucun résultat trouvé pour "${term}".`; return; } progress.textContent = `Résultats : ${found.length} trouvé(s).`; for (const r of found) { const el = document.createElement('div'); el.className='card'; el.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:700">📄 ${r.nom}</div>
+            <div class="muted" style="font-size:12px">${r.chemin}</div>
+          </div>
+          <a href="${r.downloadUrl}" download="${r.nom}" class="btn">Télécharger</a>
+        </div>
+        <div class="divider"></div>
+        <pre class="code" style="white-space:pre-wrap;margin:0">${r.ligne}</pre>`; results.appendChild(el); } } catch (error) { console.error('Erreur recherche :', error); progress.textContent = `Erreur : ${error.message}`; }
 }
 
-// Lancement
-document.addEventListener('DOMContentLoaded', init);
+/** =========================
+ * EVENTS
+ * ========================= */
+$('#year').textContent = new Date().getFullYear();
+loginBtn.addEventListener('click', loginDiscord);
+logoutBtn.addEventListener('click', logout);
+$('#buyBtn').addEventListener('click', handleBuy);
+$('#haveKeyBtn').addEventListener('click', ()=> activationBlock.scrollIntoView({behavior:'smooth',block:'center'}));
+$('#activateKeyBtn').addEventListener('click', async ()=>{ const input = $('#keyInput'); const key = (input.value||'').trim().toUpperCase(); $('#activationMsg').classList.remove('ok-text','danger-text'); $('#activationMsg').textContent=''; $('#roleAssignmentStatus').classList.add('hide'); try{ if (!key || key.length !== 32) throw new Error('Clé invalide (32 caractères requis).'); showLoadingScreen('Activation de votre clé...'); await activateExistingKeyForUser(key); $('#activationMsg').classList.add('ok-text'); $('#activationMsg').textContent = '✅ Clé activée avec succès!'; hideLoadingScreen(); }catch(e){ $('#activationMsg').classList.add('danger-text'); $('#activationMsg').textContent = '❌ ' + e.message; hideLoadingScreen(); }});
+$('#doSearch').addEventListener('click', ()=> runSearch($('#q').value));
+$('#closeSticky').addEventListener('click', ()=> stickyKey.classList.add('hide'));
+$('#submitVouch').addEventListener('click', submitVouch);
+setupVouchCharacterCounter();
 
+// Stripe popup buttons
+$('#closePaymentBtn').addEventListener('click', ()=> { $('#paymentPopup').style.display = 'none'; });
+$('#confirmPaymentBtn').addEventListener('click', confirmStripePayment);
 
+(async function init(){
+  showLoadingScreen();
+  setLoggedOutUI();
+  try { await auth.signInAnonymously(); } catch {}
+  const parsedToken = parseImplicitToken();
+  if (parsedToken) { discordAuth = parsedToken; } else { loadSession(); }
+  if (discordAuth?.token) { await updateFromDiscord(discordAuth.token); } else { hideLoadingScreen(); }
+
+  // 🟦 Vérifie si on revient d’un paiement Stripe (param ?payment_completed=pi_xxx)
+  await handleStripeSuccess();
+})();
