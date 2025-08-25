@@ -434,6 +434,79 @@ function parseImplicitToken() { if (window.location.hash.startsWith('#')) { cons
 async function fetchDiscordJSON(token, path) { const r = await fetch(`https://discord.com/api${path}`, { headers: { Authorization: `Bearer ${token}` } }); if (!r.ok) throw new Error('Discord API error: ' + r.status); return r.json(); }
 
 /** =========================
+ * UI & FLUX
+ * ========================= */
+const userBadge = $('#userBadge');
+const loginBtn = $('#loginBtn');
+const logoutBtn = $('#logoutBtn');
+const rolesChips = $('#rolesChips');
+const accountState = $('#accountState');
+const purchaseBlock = $('#purchaseBlock');
+const activationBlock = $('#activationBlock');
+const searchGate = $('#searchGate');
+const searchUI = $('#searchUI');
+const results = $('#results');
+const progress = $('#progress');
+const stickyKey = $('#stickyKey');
+const stickyKeyValue = $('#stickyKeyValue');
+
+let discordAuth = null;
+let discordUser = null;
+let discordMember = null;
+
+function saveSession() { sessionStorage.setItem('nazapi_discord_auth', JSON.stringify(discordAuth || null)); sessionStorage.setItem('nazapi_discord_user', JSON.stringify(discordUser || null)); sessionStorage.setItem('nazapi_discord_member', JSON.stringify(discordMember || null)); }
+function loadSession() { try{ discordAuth  = JSON.parse(sessionStorage.getItem('nazapi_discord_auth')||'null'); discordUser  = JSON.parse(sessionStorage.getItem('nazapi_discord_user')||'null'); discordMember= JSON.parse(sessionStorage.getItem('nazapi_discord_member')||'null'); }catch{} }
+
+function setLoggedOutUI() {
+  userBadge.textContent = 'Non connecté';
+  rolesChips.innerHTML = '';
+  accountState.innerHTML = `<div class="muted">Connecte-toi avec Discord pour vérifier tes rôles sur le serveur.</div>`;
+  purchaseBlock.classList.add('hide');
+  activationBlock.classList.add('hide');
+  searchGate.classList.remove('hide');
+  searchUI.classList.add('hide');
+  logoutBtn.classList.add('hide');
+  loginBtn.classList.remove('hide');
+  $('#vouchSection').classList.add('hide');
+  $('#vouchForm').classList.add('hide');
+}
+function showRolesChips(member){ rolesChips.innerHTML = ''; if (!member || !Array.isArray(member.roles)) return; member.roles.forEach(id=>{ const span = document.createElement('span'); span.className='role-chip'; span.textContent = (id===DISCORD.PREMIUM_ROLE_ID?'Premium':(id===DISCORD.VIP_ROLE_ID?'VIP':(id===DISCORD.MOD_ROLE_ID?'Mod':'Rôle '+id))); rolesChips.appendChild(span); }); }
+function setLoggedInUI(hasPremium) {
+  userBadge.textContent = discordUser ? `${discordUser.username}#${discordUser.discriminator || '0'}` : 'Connecté';
+  showRolesChips({roles: discordMember?.roles || []});
+  logoutBtn.classList.remove('hide');
+  loginBtn.classList.add('hide');
+  $('#vouchSection').classList.remove('hide');
+  if (hasPremium) {
+    $('#vouchForm').classList.remove('hide');
+    accountState.innerHTML = `<div class="ok-text">Accès Premium/VIP validé ✔</div><div class="muted" style="font-size:13px">Tu peux utiliser la recherche.</div>`;
+    purchaseBlock.classList.add('hide');
+    activationBlock.classList.remove('hide');
+    searchGate.classList.add('hide');
+    searchUI.classList.remove('hide');
+  } else {
+    $('#vouchForm').classList.add('hide');
+    accountState.innerHTML = `<div class="danger-text">Accès Premium requis</div><div class="muted" style="font-size:13px">Achète Premium (16,99 €) ou active une clé existante.</div>`;
+    purchaseBlock.classList.remove('hide');
+    activationBlock.classList.remove('hide');
+    searchGate.classList.remove('hide');
+    searchUI.classList.add('hide');
+  }
+  loadVouches();
+}
+async function updateFromDiscord(token) {
+  try{
+    showLoadingScreen('Connexion à Discord...');
+    discordUser = await fetchDiscordJSON(token, '/users/@me');
+    let memberObj = await fetchDiscordJSON(token, `/users/@me/guilds/${DISCORD.GUILD_ID}/member`);
+    discordMember = { roles: (memberObj.roles||[]) };
+    saveSession();
+    const hasPremium = hasPremiumAccess();
+    setLoggedInUI(hasPremium); hideLoadingScreen();
+  }catch(e){ console.error('Erreur Discord :', e); setLoggedOutUI(); hideLoadingScreen(); }
+}
+function logout(){ discordAuth = discordUser = discordMember = null; saveSession(); setLoggedOutUI(); }
+/** =========================
  * INITIALISATION
  * ========================= */
 $('#year').textContent = new Date().getFullYear();
