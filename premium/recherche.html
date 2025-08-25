@@ -616,32 +616,31 @@ textarea {
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-functions-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-storage-compat.js"></script>
-
 <script>
 /** =========================
  * CONFIGURATION
  * ========================= */
 const DISCORD = {
-  CLIENT_ID: '1407764995671986249',
-  GUILD_ID: '1406489247543984240',
-  SCOPES: ['identify', 'guilds.members.read'],
-  REDIRECT_URI: window.location.origin + window.location.pathname,
-  PREMIUM_ROLE_ID: '1406489247573086400',
-  VIP_ROLE_ID: '1406489247564824669',
-  MOD_ROLE_ID: '1406489247598252069'
+  CLIENT_ID: '1407764995671986249',
+  GUILD_ID: '1406489247543984240',
+  SCOPES: ['identify', 'guilds.members.read'],
+  REDIRECT_URI: window.location.origin + window.location.pathname,
+  PREMIUM_ROLE_ID: '1406489247573086400',
+  VIP_ROLE_ID: '1406489247564824669',
+  MOD_ROLE_ID: '1406489247598252069'
 };
 
 const STRIPE = {
-  PUBLIC_KEY: 'pk_test_51Rys3a1EC7Cm7d9GpJkkTiJHhlAdD4aaRmKYvaAQownN4JmUK6R18VMB8K6RJ94iC5F6hxMarSCvv5lLc55zjlIF00wrJIQC07',
-  CREATE_PAYMENT_INTENT_URL: '/create-payment-intent'
+  PUBLIC_KEY: 'pk_test_51Rys3a1EC7Cm7d9GpJkkTiJHhlAdD4aaRmKYvaAQownN4JmUK6R18VMB8K6RJ94iC5F6hxMarSCvv5lLc55zjlIF00wrJIQC07',
+  CREATE_PAYMENT_INTENT_URL: '/create-payment-intent'
 };
 
 const FIREBASE_CFG = {
-  apiKey: "AIzaSyBtVmI_0_9qC6Cj5lmYgbwVJlW8lH11Ouw",
-  authDomain: "nazapi-fc74e.firebaseapp.com",
-  projectId: "nazapi-fc74e",
-  storageBucket: "nazapi-fc74e.firebasestorage.app",
-  appId: "1:1011679210688:web:eeccc40063f83b91e3d125",
+  apiKey: "AIzaSyBtVmI_0_9qC6Cj5lmYgbwVJlW8lH11Ouw",
+  authDomain: "nazapi-fc74e.firebaseapp.com",
+  projectId: "nazapi-fc74e",
+  storageBucket: "nazapi-fc74e.firebasestorage.app",
+  appId: "1:1011679210688:web:eeccc40063f83b91e3d125",
 };
 
 const LICENSES_PATH = '/artifacts/' + ('default-app-id') + '/public/data/licenses';
@@ -657,15 +656,15 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const toHexUpper = (buf) => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
 
 function generateLicenseKey() {
-  const arr = new Uint8Array(16);
-  crypto.getRandomValues(arr);
-  return toHexUpper(arr.buffer);
+  const arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  return toHexUpper(arr.buffer);
 }
 
 function formatDate(timestamp) {
-  if (!timestamp) return '';
-  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-  return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
+  if (!timestamp) return '';
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
 }
 
 // Firebase
@@ -674,108 +673,126 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 const functions = firebase.functions();
 const storage = firebase.storage();
+
 /** =========================
  * LOADING SCREEN
  * ========================= */
-function showLoadingScreen(message = 'Chargement...') { const loadingScreen = $('#loadingScreen'); const loadingText = loadingScreen.querySelector('.loading-text'); if (message) { loadingText.innerHTML = message + '<span class="loading-dots"></span>'; } loadingScreen.style.display = 'flex'; setTimeout(() => { loadingScreen.style.opacity = '1'; }, 10); }
-function hideLoadingScreen() { const loadingScreen = $('#loadingScreen'); loadingScreen.style.opacity = '0'; setTimeout(() => { loadingScreen.style.display = 'none'; }, 500); }
+function showLoadingScreen(message = 'Chargement...') { 
+  const loadingScreen = $('#loadingScreen'); 
+  const loadingText = loadingScreen.querySelector('.loading-text'); 
+  if (message) { 
+    loadingText.innerHTML = message + '<span class="loading-dots"></span>'; 
+  } 
+  loadingScreen.style.display = 'flex'; 
+  setTimeout(() => { loadingScreen.style.opacity = '1'; }, 10); 
+}
+
+function hideLoadingScreen() { 
+  const loadingScreen = $('#loadingScreen'); 
+  loadingScreen.style.opacity = '0'; 
+  setTimeout(() => { loadingScreen.style.display = 'none'; }, 500); 
+}
 
 /** =========================
  * GESTION DES RECHERCHES
  * ========================= */
 async function performSearch(searchTerm) {
-  if (!searchTerm || searchTerm.trim().length < 2) {
-    $('#searchProgress').textContent = 'Terme de recherche trop court (min. 2 caractères).';
-    return;
-  }
+  if (!searchTerm || searchTerm.trim().length < 2) {
+    $('#searchProgress').textContent = 'Terme de recherche trop court (min. 2 caractères).';
+    return;
+  }
 
-  $('#searchProgress').textContent = 'Recherche en cours...';
-  $('#searchResults').innerHTML = '';
+  showLoadingScreen('Recherche en cours...');
+  $('#searchResults').innerHTML = '';
 
-  try {
-    const user = auth.currentUser;
-    if (!user) {
-      throw new Error("Utilisateur non authentifié.");
-    }
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error("Utilisateur non authentifié.");
+    }
 
-    const today = new Date().toISOString().split('T')[0];
-    const userDocRef = db.collection('users').doc(user.uid);
-    const userDoc = await userDocRef.get();
-    const userData = userDoc.data() || {};
-    const searchCount = userData.searchCounts?.[today] || 0;
+    const today = new Date().toISOString().split('T')[0];
+    const userDocRef = db.collection('users').doc(user.uid);
+    const userDoc = await userDocRef.get();
+    const userData = userDoc.data() || {};
+    const searchCount = userData.searchCounts?.[today] || 0;
 
-    if (searchCount >= SEARCH_LIMIT_PER_DAY) {
-      $('#searchProgress').textContent = `Limite de ${SEARCH_LIMIT_PER_DAY} recherches par jour atteinte.`;
-      return;
-    }
+    if (searchCount >= SEARCH_LIMIT_PER_DAY) {
+      $('#searchProgress').textContent = `Limite de ${SEARCH_LIMIT_PER_DAY} recherches par jour atteinte.`;
+      hideLoadingScreen();
+      return;
+    }
 
-    // Appeler la fonction cloud pour rechercher dans Firebase Storage
-    const searchFunction = functions.httpsCallable('searchInFiles');
-    const response = await searchFunction({ query: searchTerm });
-    const results = response.data.results;
+    // Appeler la fonction cloud pour rechercher dans Firestore
+    const searchFunction = functions.httpsCallable('searchFiles');
+    const response = await searchFunction({ query: searchTerm });
+    const results = response.data.results;
 
-    // Incrémenter le compteur de recherches dans Firestore
-    await userDocRef.set({
-      searchCounts: {
-        [today]: firebase.firestore.FieldValue.increment(1)
-      }
-    }, { merge: true });
+    // Incrémenter le compteur de recherches dans Firestore
+    await userDocRef.set({
+      searchCounts: {
+        [today]: firebase.firestore.FieldValue.increment(1)
+      }
+    }, { merge: true });
 
-    // Mettre à jour l'interface avec le nouveau nombre de recherches restantes
-    const remainingSearches = SEARCH_LIMIT_PER_DAY - (searchCount + 1);
-    $('#searchProgress').textContent = `Recherche terminée - ${results.length} résultat(s) trouvé(s). Il vous reste ${remainingSearches} recherches.`;
+    // Mettre à jour l'interface avec le nouveau nombre de recherches restantes
+    const remainingSearches = SEARCH_LIMIT_PER_DAY - (searchCount + 1);
+    $('#searchProgress').textContent = `Recherche terminée - ${results.length} résultat(s) trouvé(s). Il vous reste ${remainingSearches} recherches.`;
 
-    if (!results || results.length === 0) {
-      $('#searchResults').innerHTML = '<div class="no-results">Aucun résultat trouvé pour "' + searchTerm + '".</div>';
-      return;
-    }
+    if (!results || results.length === 0) {
+      $('#searchResults').innerHTML = '<div class="no-results">Aucun résultat trouvé pour "' + searchTerm + '".</div>';
+      hideLoadingScreen();
+      return;
+    }
 
-    // Afficher les résultats
-    results.forEach(result => {
-      const resultElement = document.createElement('div');
-      resultElement.className = 'result-box';
-      resultElement.innerHTML = `
-        <div class="result-header">
-          <div class="muted" style="font-size:12px">Fichier: ${result.fileName}</div>
-          <button class="result-copy-btn" data-content="${escapeHtml(result.matchingLine)}">Copier</button>
-        </div>
-        <div class="result-content">${result.matchingLine}</div>
-      `;
-      $('#searchResults').appendChild(resultElement);
-    });
+    // Afficher les résultats
+    results.forEach(result => {
+      const resultElement = document.createElement('div');
+      resultElement.className = 'result-box';
+      resultElement.innerHTML = `
+        <div class="result-header">
+          <div class="muted" style="font-size:12px">Fichier: ${result.fileName}</div>
+          <button class="result-copy-btn" data-content="${escapeHtml(result.matchingLine)}">Copier</button>
+        </div>
+        <div class="result-content">${result.matchingLine}</div>
+      `;
+      $('#searchResults').appendChild(resultElement);
+    });
 
-    // Ajouter les écouteurs d'événements pour les boutons de copie
-    document.querySelectorAll('.result-copy-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const content = this.getAttribute('data-content');
-        copyToClipboard(content);
-        this.textContent = 'Copié!';
-        setTimeout(() => {
-          this.textContent = 'Copier';
-        }, 2000);
-      });
-    });
+    // Ajouter les écouteurs d'événements pour les boutons de copie
+    document.querySelectorAll('.result-copy-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const content = this.getAttribute('data-content');
+        copyToClipboard(content);
+        this.textContent = 'Copié!';
+        setTimeout(() => {
+          this.textContent = 'Copier';
+        }, 2000);
+      });
+    });
 
-  } catch (error) {
-    console.error('Erreur lors de la recherche:', error);
-    $('#searchProgress').textContent = 'Erreur lors de la recherche: ' + error.message;
-    $('#searchResults').innerHTML = '<div class="no-results">Une erreur s\'est produite lors de la recherche.</div>';
-  }
+  } catch (error) {
+    console.error('Erreur lors de la recherche:', error);
+    $('#searchProgress').textContent = 'Erreur lors de la recherche: ' + error.message;
+    $('#searchResults').innerHTML = '<div class="no-results">Une erreur s\'est produite lors de la recherche.</div>';
+  } finally {
+    hideLoadingScreen();
+  }
 }
 
 function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 function copyToClipboard(text) {
-  const textarea = document.createElement('textarea');
-  textarea.value = text;
-  document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand('copy');
-  document.body.removeChild(textarea);
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
 }
 
 /** =========================
@@ -786,247 +803,247 @@ let elements;
 
 // Stripe
 async function openStripePopupAndInitElements() {
-  $('#paymentPopup').style.display = 'flex';
-  if (!stripe) stripe = Stripe(STRIPE.PUBLIC_KEY);
-  try {
-    const response = await fetch(STRIPE.CREATE_PAYMENT_INTENT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: 1699, currency: 'eur' })
-    });
-    const { clientSecret } = await response.json();
-    elements = stripe.elements({ clientSecret });
-    const paymentElement = elements.create('payment');
-    paymentElement.mount('#payment-element');
-    $('#confirmPaymentBtn').disabled = false;
-    $('#paymentMessage').textContent = '';
-  } catch (e) {
-    $('#paymentMessage').textContent = 'Erreur de connexion au paiement.';
-    console.error(e);
-  }
+  $('#paymentPopup').style.display = 'flex';
+  if (!stripe) stripe = Stripe(STRIPE.PUBLIC_KEY);
+  try {
+    const response = await fetch(STRIPE.CREATE_PAYMENT_INTENT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: 1699, currency: 'eur' })
+    });
+    const { clientSecret } = await response.json();
+    elements = stripe.elements({ clientSecret });
+    const paymentElement = elements.create('payment');
+    paymentElement.mount('#payment-element');
+    $('#confirmPaymentBtn').disabled = false;
+    $('#paymentMessage').textContent = '';
+  } catch (e) {
+    $('#paymentMessage').textContent = 'Erreur de connexion au paiement.';
+    console.error(e);
+  }
 }
 async function confirmStripePayment() {
-  $('#confirmPaymentBtn').disabled = true;
-  $('#paymentMessage').textContent = 'Traitement de votre paiement...';
-  const { error } = await stripe.confirmPayment({
-    elements,
-    confirmParams: { return_url: window.location.href }
-  });
-  if (error) {
-    $('#paymentMessage').textContent = error.message;
-    $('#confirmPaymentBtn').disabled = false;
-  }
+  $('#confirmPaymentBtn').disabled = true;
+  $('#paymentMessage').textContent = 'Traitement de votre paiement...';
+  const { error } = await stripe.confirmPayment({
+    elements,
+    confirmParams: { return_url: window.location.href }
+  });
+  if (error) {
+    $('#paymentMessage').textContent = error.message;
+    $('#confirmPaymentBtn').disabled = false;
+  }
 }
 async function handleStripeSuccess() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const paymentId = urlParams.get('payment_intent');
-  if (paymentId) {
-    showLoadingScreen('Vérification du paiement...');
-    try {
-      await markPaymentAsUsed(paymentId);
-      history.replaceState({}, document.title, window.location.pathname);
-    } catch (e) {
-      console.error('Stripe success error:', e);
-    }
-  }
+  const urlParams = new URLSearchParams(window.location.search);
+  const paymentId = urlParams.get('payment_intent');
+  if (paymentId) {
+    showLoadingScreen('Vérification du paiement...');
+    try {
+      await markPaymentAsUsed(paymentId);
+      history.replaceState({}, document.title, window.location.pathname);
+    } catch (e) {
+      console.error('Stripe success error:', e);
+    }
+  }
 }
 async function markPaymentAsUsed(paymentIntentId) {
-  const user = auth.currentUser;
-  if (!user || !discordUser) throw new Error('Utilisateur non connecté.');
-  const docRef = db.collection('payments').doc(paymentIntentId);
-  const doc = await docRef.get();
-  if (doc.exists && doc.data().used) {
-    console.log('Payment already used.'); return;
-  }
-  await docRef.set({
-    userId: user.uid,
-    discordId: discordUser.id,
-    dateUsed: firebase.firestore.Timestamp.now(),
-    used: true
-  });
-  const licenseKey = generateLicenseKey();
-  await db.collection(LICENSES_PATH).doc(licenseKey).set({
-    created: firebase.firestore.Timestamp.now(),
-    creatorId: discordUser.id,
-    usedBy: null
-  });
-  $('#stickyKeyValue').textContent = licenseKey;
-  $('#stickyKey').classList.remove('hide');
-  await assignDiscordRole(DISCORD.PREMIUM_ROLE_ID);
+  const user = auth.currentUser;
+  if (!user || !discordUser) throw new Error('Utilisateur non connecté.');
+  const docRef = db.collection('payments').doc(paymentIntentId);
+  const doc = await docRef.get();
+  if (doc.exists && doc.data().used) {
+    console.log('Payment already used.'); return;
+  }
+  await docRef.set({
+    userId: user.uid,
+    discordId: discordUser.id,
+    dateUsed: firebase.firestore.Timestamp.now(),
+    used: true
+  });
+  const licenseKey = generateLicenseKey();
+  await db.collection(LICENSES_PATH).doc(licenseKey).set({
+    created: firebase.firestore.Timestamp.now(),
+    creatorId: discordUser.id,
+    usedBy: null
+  });
+  $('#stickyKeyValue').textContent = licenseKey;
+  $('#stickyKey').classList.remove('hide');
+  await assignDiscordRole(DISCORD.PREMIUM_ROLE_ID);
 }
 
 // Discord
 function loginDiscord() {
-  const params = new URLSearchParams({ client_id: DISCORD.CLIENT_ID, response_type: 'token', redirect_uri: DISCORD.REDIRECT_URI, scope: DISCORD.SCOPES.join(' ') });
-  window.location.href = `https://discord.com/oauth2/authorize?${params.toString()}`;
+  const params = new URLSearchParams({ client_id: DISCORD.CLIENT_ID, response_type: 'token', redirect_uri: DISCORD.REDIRECT_URI, scope: DISCORD.SCOPES.join(' ') });
+  window.location.href = `https://discord.com/oauth2/authorize?${params.toString()}`;
 }
 function parseImplicitToken() {
-  if (window.location.hash.startsWith('#')) {
-    const h = new URLSearchParams(window.location.hash.slice(1));
-    if (h.get('access_token')) {
-      const token = h.get('access_token');
-      const tokenType = h.get('token_type') || 'Bearer';
-      const expires = Number(h.get('expires_in') || 0);
-      history.replaceState({}, document.title, window.location.pathname + window.location.search);
-      return { token, tokenType, expires };
-    }
-  }
-  return null;
+  if (window.location.hash.startsWith('#')) {
+    const h = new URLSearchParams(window.location.hash.slice(1));
+    if (h.get('access_token')) {
+      const token = h.get('access_token');
+      const tokenType = h.get('token_type') || 'Bearer';
+      const expires = Number(h.get('expires_in') || 0);
+      history.replaceState({}, document.title, window.location.pathname + window.location.search);
+      return { token, tokenType, expires };
+    }
+  }
+  return null;
 }
 async function fetchDiscordJSON(token, path) {
-  const r = await fetch(`https://discord.com/api${path}`, { headers: { Authorization: `Bearer ${token}` } });
-  if (!r.ok) throw new Error('Discord API error: ' + r.status);
-  return r.json();
+  const r = await fetch(`https://discord.com/api${path}`, { headers: { Authorization: `Bearer ${token}` } });
+  if (!r.ok) throw new Error('Discord API error: ' + r.status);
+  return r.json();
 }
 async function assignDiscordRole(roleId) {
-  $('#roleAssignmentStatus').classList.remove('hide', 'success', 'error', 'updating');
-  $('#roleAssignmentStatus').classList.add('updating');
-  $('#roleAssignmentStatus').textContent = 'Attribution du rôle en cours...';
-  try {
-    const assignRoleFunction = functions.httpsCallable('assignDiscordRole');
-    const response = await assignRoleFunction({ discordId: discordUser.id, roleId: roleId });
-    if (response.data.success) {
-      $('#roleAssignmentStatus').textContent = 'Rôle Premium attribué avec succès!';
-      $('#roleAssignmentStatus').classList.remove('updating');
-      $('#roleAssignmentStatus').classList.add('success');
-      await sleep(2000);
-      location.reload();
-    } else {
-      throw new Error(response.data.error || 'Erreur inconnue.');
-    }
-  } catch (e) {
-    console.error('Failed to assign role:', e);
-    $('#roleAssignmentStatus').textContent = 'Erreur: Impossible d\'attribuer le rôle. Contactez un modérateur.';
-    $('#roleAssignmentStatus').classList.remove('updating');
-    $('#roleAssignmentStatus').classList.add('error');
-  }
+  $('#roleAssignmentStatus').classList.remove('hide', 'success', 'error', 'updating');
+  $('#roleAssignmentStatus').classList.add('updating');
+  $('#roleAssignmentStatus').textContent = 'Attribution du rôle en cours...';
+  try {
+    const assignRoleFunction = functions.httpsCallable('assignDiscordRole');
+    const response = await assignRoleFunction({ discordId: discordUser.id, roleId: roleId });
+    if (response.data.success) {
+      $('#roleAssignmentStatus').textContent = 'Rôle Premium attribué avec succès!';
+      $('#roleAssignmentStatus').classList.remove('updating');
+      $('#roleAssignmentStatus').classList.add('success');
+      await sleep(2000);
+      location.reload();
+    } else {
+      throw new Error(response.data.error || 'Erreur inconnue.');
+    }
+  } catch (e) {
+    console.error('Failed to assign role:', e);
+    $('#roleAssignmentStatus').textContent = 'Erreur: Impossible d\'attribuer le rôle. Contactez un modérateur.';
+    $('#roleAssignmentStatus').classList.remove('updating');
+    $('#roleAssignmentStatus').classList.add('error');
+  }
 }
 function hasPremiumAccess() {
-  const roles = discordMember?.roles || [];
-  return roles.includes(DISCORD.PREMIUM_ROLE_ID) || roles.includes(DISCORD.VIP_ROLE_ID);
+  const roles = discordMember?.roles || [];
+  return roles.includes(DISCORD.PREMIUM_ROLE_ID) || roles.includes(DISCORD.VIP_ROLE_ID);
 }
 function hasModPermissions() {
-  const roles = discordMember?.roles || [];
-  return roles.includes(DISCORD.MOD_ROLE_ID);
+  const roles = discordMember?.roles || [];
+  return roles.includes(DISCORD.MOD_ROLE_ID);
 }
 
 // Vouches
 async function loadVouches() {
-  const vouchList = $('#vouchList');
-  vouchList.innerHTML = '';
-  try {
-    const vouchesSnapshot = await db.collection(VOUCHES_PATH).orderBy('timestamp', 'desc').get();
-    if (vouchesSnapshot.empty) {
-      vouchList.innerHTML = '<div class="no-vouches">Aucun témoignage pour le moment.</div>';
-      return;
-    }
-    vouchesSnapshot.forEach(doc => {
-      const vouch = doc.data();
-      const vouchElement = createVouchElement(doc.id, vouch);
-      vouchList.appendChild(vouchElement);
-    });
-  } catch (e) {
-    console.error('Error loading vouches:', e);
-  }
+  const vouchList = $('#vouchList');
+  vouchList.innerHTML = '';
+  try {
+    const vouchesSnapshot = await db.collection(VOUCHES_PATH).orderBy('timestamp', 'desc').get();
+    if (vouchesSnapshot.empty) {
+      vouchList.innerHTML = '<div class="no-vouches">Aucun témoignage pour le moment.</div>';
+      return;
+    }
+    vouchesSnapshot.forEach(doc => {
+      const vouch = doc.data();
+      const vouchElement = createVouchElement(doc.id, vouch);
+      vouchList.appendChild(vouchElement);
+    });
+  } catch (e) {
+    console.error('Error loading vouches:', e);
+  }
 }
 function createVouchElement(id, vouch) {
-  const vouchItem = document.createElement('div');
-  vouchItem.className = 'vouch-item';
-  const isOwner = discordUser && vouch.discordId === discordUser.id;
-  const isMod = hasModPermissions();
-  const deleteBtnHtml = (isOwner || isMod) ? `<button class="vouch-delete" data-id="${id}">Supprimer</button>` : '';
-  vouchItem.innerHTML = `
-    <div class="vouch-header">
-      <div class="vouch-user">
-        <img src="https://cdn.discordapp.com/avatars/${vouch.discordId}/${vouch.avatar}.png?size=32" class="vouch-avatar" alt="Avatar Discord de ${vouch.username}">
-        <span class="vouch-name">${vouch.username}</span>
-      </div>
-      <div class="vouch-date muted">${formatDate(vouch.timestamp)}</div>
-    </div>
-    <div class="vouch-content">${vouch.content}</div>
-    ${deleteBtnHtml}
-  `;
-  if (isOwner || isMod) {
-    vouchItem.querySelector('.vouch-delete').addEventListener('click', () => deleteVouch(id));
-  }
-  return vouchItem;
+  const vouchItem = document.createElement('div');
+  vouchItem.className = 'vouch-item';
+  const isOwner = discordUser && vouch.discordId === discordUser.id;
+  const isMod = hasModPermissions();
+  const deleteBtnHtml = (isOwner || isMod) ? `<button class="vouch-delete" data-id="${id}">Supprimer</button>` : '';
+  vouchItem.innerHTML = `
+    <div class="vouch-header">
+      <div class="vouch-user">
+        <img src="https://cdn.discordapp.com/avatars/${vouch.discordId}/${vouch.avatar}.png?size=32" class="vouch-avatar" alt="Avatar Discord de ${vouch.username}">
+        <span class="vouch-name">${vouch.username}</span>
+      </div>
+      <div class="vouch-date muted">${formatDate(vouch.timestamp)}</div>
+    </div>
+    <div class="vouch-content">${vouch.content}</div>
+    ${deleteBtnHtml}
+  `;
+  if (isOwner || isMod) {
+    vouchItem.querySelector('.vouch-delete').addEventListener('click', () => deleteVouch(id));
+  }
+  return vouchItem;
 }
 async function submitVouch() {
-  const vouchText = $('#vouchText').value;
-  if (!vouchText || vouchText.length < 10) {
-    alert('Votre témoignage doit contenir au moins 10 caractères.'); return;
-  }
-  try {
-    const vouchFunction = functions.httpsCallable('submitVouch');
-    await vouchFunction({
-      content: vouchText,
-      discordId: discordUser.id,
-      username: `${discordUser.username}#${discordUser.discriminator}`,
-      avatar: discordUser.avatar
-    });
-    $('#vouchText').value = '';
-    loadVouches();
-  } catch (e) {
-    console.error('Error submitting vouch:', e);
-    alert('Erreur lors de la soumission de votre témoignage.');
-  }
+  const vouchText = $('#vouchText').value;
+  if (!vouchText || vouchText.length < 10) {
+    alert('Votre témoignage doit contenir au moins 10 caractères.'); return;
+  }
+  try {
+    const vouchFunction = functions.httpsCallable('submitVouch');
+    await vouchFunction({
+      content: vouchText,
+      discordId: discordUser.id,
+      username: `${discordUser.username}#${discordUser.discriminator}`,
+      avatar: discordUser.avatar
+    });
+    $('#vouchText').value = '';
+    loadVouches();
+  } catch (e) {
+    console.error('Error submitting vouch:', e);
+    alert('Erreur lors de la soumission de votre témoignage.');
+  }
 }
 async function deleteVouch(id) {
-  if (!confirm('Êtes-vous sûr de vouloir supprimer ce témoignage?')) return;
-  try {
-    const deleteFunction = functions.httpsCallable('deleteVouch');
-    await deleteFunction({ vouchId: id });
-    loadVouches();
-  } catch (e) {
-    console.error('Error deleting vouch:', e);
-    alert('Erreur lors de la suppression du témoignage.');
-  }
+  if (!confirm('Êtes-vous sûr de vouloir supprimer ce témoignage?')) return;
+  try {
+    const deleteFunction = functions.httpsCallable('deleteVouch');
+    await deleteFunction({ vouchId: id });
+    loadVouches();
+  } catch (e) {
+    console.error('Error deleting vouch:', e);
+    alert('Erreur lors de la suppression du témoignage.');
+  }
 }
 function setupVouchCharacterCounter() {
-  const textarea = $('#vouchText');
-  const counter = $('#vouchCharCount');
-  textarea.addEventListener('input', () => {
-    const count = textarea.value.length;
-    counter.textContent = `${count}/${textarea.maxLength}`;
-    if (count > textarea.maxLength * 0.9) counter.classList.add('warning');
-    else if (count > textarea.maxLength) counter.classList.add('error');
-    else counter.classList.remove('warning', 'error');
-  });
+  const textarea = $('#vouchText');
+  const counter = $('#vouchCharCount');
+  textarea.addEventListener('input', () => {
+    const count = textarea.value.length;
+    counter.textContent = `${count}/${textarea.maxLength}`;
+    if (count > textarea.maxLength * 0.9) counter.classList.add('warning');
+    else if (count > textarea.maxLength) counter.classList.add('error');
+    else counter.classList.remove('warning', 'error');
+  });
 }
 async function createLicenseForUser() {
-  showLoadingScreen('Génération de votre clé...');
-  const licenseFunction = functions.httpsCallable('createLicense');
-  const response = await licenseFunction();
-  const { key } = response.data;
-  if (key) {
-    $('#stickyKeyValue').textContent = key;
-    $('#stickyKey').classList.remove('hide');
-    hideLoadingScreen();
-  }
+  showLoadingScreen('Génération de votre clé...');
+  const licenseFunction = functions.httpsCallable('createLicense');
+  const response = await licenseFunction();
+  const { key } = response.data;
+  if (key) {
+    $('#stickyKeyValue').textContent = key;
+    $('#stickyKey').classList.remove('hide');
+    hideLoadingScreen();
+  }
 }
 async function activateExistingKeyForUser() {
-  const key = $('#keyInput').value;
-  if (!key || key.length !== 32) {
-    $('#activationMsg').textContent = 'Clé invalide. Elle doit contenir 32 caractères.';
-    return;
-  }
-  showLoadingScreen('Activation de la clé...');
-  $('#activationMsg').textContent = 'Vérification de la clé en cours...';
-  try {
-    const activateFunction = functions.httpsCallable('activateLicense');
-    const response = await activateFunction({ key });
-    if (response.data.success) {
-      $('#activationMsg').textContent = 'Clé activée avec succès!';
-      await assignDiscordRole(DISCORD.PREMIUM_ROLE_ID);
-    } else {
-      $('#activationMsg').textContent = response.data.error || 'Erreur inconnue lors de l\'activation.';
-    }
-  } catch (e) {
-    console.error('Activation error:', e);
-    $('#activationMsg').textContent = e.message;
-  } finally {
-    hideLoadingScreen();
-  }
+  const key = $('#keyInput').value;
+  if (!key || key.length !== 32) {
+    $('#activationMsg').textContent = 'Clé invalide. Elle doit contenir 32 caractères.';
+    return;
+  }
+  showLoadingScreen('Activation de la clé...');
+  $('#activationMsg').textContent = 'Vérification de la clé en cours...';
+  try {
+    const activateFunction = functions.httpsCallable('activateLicense');
+    const response = await activateFunction({ key });
+    if (response.data.success) {
+      $('#activationMsg').textContent = 'Clé activée avec succès!';
+      await assignDiscordRole(DISCORD.PREMIUM_ROLE_ID);
+    } else {
+      $('#activationMsg').textContent = response.data.error || 'Erreur inconnue lors de l\'activation.';
+    }
+  } catch (e) {
+    console.error('Activation error:', e);
+    $('#activationMsg').textContent = e.message;
+  } finally {
+    hideLoadingScreen();
+  }
 }
 
 /** =========================
@@ -1049,102 +1066,102 @@ let discordAuth = null;
 let discordUser = null;
 let discordMember = null;
 function saveSession() {
-  sessionStorage.setItem('nazapi_discord_auth', JSON.stringify(discordAuth || null));
-  sessionStorage.setItem('nazapi_discord_user', JSON.stringify(discordUser || null));
-  sessionStorage.setItem('nazapi_discord_member', JSON.stringify(discordMember || null));
+  sessionStorage.setItem('nazapi_discord_auth', JSON.stringify(discordAuth || null));
+  sessionStorage.setItem('nazapi_discord_user', JSON.stringify(discordUser || null));
+  sessionStorage.setItem('nazapi_discord_member', JSON.stringify(discordMember || null));
 }
 function loadSession() {
-  try {
-    discordAuth = JSON.parse(sessionStorage.getItem('nazapi_discord_auth') || 'null');
-    discordUser = JSON.parse(sessionStorage.getItem('nazapi_discord_user') || 'null');
-    discordMember = JSON.parse(sessionStorage.getItem('nazapi_discord_member') || 'null');
-  } catch {}
+  try {
+    discordAuth = JSON.parse(sessionStorage.getItem('nazapi_discord_auth') || 'null');
+    discordUser = JSON.parse(sessionStorage.getItem('nazapi_discord_user') || 'null');
+    discordMember = JSON.parse(sessionStorage.getItem('nazapi_discord_member') || 'null');
+  } catch {}
 }
 function setLoggedOutUI() {
-  userBadge.textContent = 'Non connecté';
-  rolesChips.innerHTML = '';
-  accountState.innerHTML = `<div class="muted">Connecte-toi avec Discord pour vérifier tes rôles sur le serveur.</div>`;
-  purchaseBlock.classList.add('hide');
-  activationBlock.classList.add('hide');
-  searchGate.classList.remove('hide');
-  searchUI.classList.add('hide');
-  logoutBtn.classList.add('hide');
-  loginBtn.classList.remove('hide');
-  $('#vouchSection').classList.add('hide');
-  $('#vouchForm').classList.add('hide');
+  userBadge.textContent = 'Non connecté';
+  rolesChips.innerHTML = '';
+  accountState.innerHTML = `<div class="muted">Connecte-toi avec Discord pour vérifier tes rôles sur le serveur.</div>`;
+  purchaseBlock.classList.add('hide');
+  activationBlock.classList.add('hide');
+  searchGate.classList.remove('hide');
+  searchUI.classList.add('hide');
+  logoutBtn.classList.add('hide');
+  loginBtn.classList.remove('hide');
+  $('#vouchSection').classList.add('hide');
+  $('#vouchForm').classList.add('hide');
 }
 function showRolesChips(member) {
-  rolesChips.innerHTML = '';
-  if (!member || !Array.isArray(member.roles)) return;
-  member.roles.forEach(id => {
-    const span = document.createElement('span');
-    span.className = 'role-chip';
-    span.textContent = (id === DISCORD.PREMIUM_ROLE_ID ? 'Premium' : (id === DISCORD.VIP_ROLE_ID ? 'VIP' : (id === DISCORD.MOD_ROLE_ID ? 'Mod' : 'Rôle ' + id)));
-    rolesChips.appendChild(span);
-  });
+  rolesChips.innerHTML = '';
+  if (!member || !Array.isArray(member.roles)) return;
+  member.roles.forEach(id => {
+    const span = document.createElement('span');
+    span.className = 'role-chip';
+    span.textContent = (id === DISCORD.PREMIUM_ROLE_ID ? 'Premium' : (id === DISCORD.VIP_ROLE_ID ? 'VIP' : (id === DISCORD.MOD_ROLE_ID ? 'Mod' : 'Rôle ' + id)));
+    rolesChips.appendChild(span);
+  });
 }
 function setLoggedInUI(hasPremium) {
-  userBadge.textContent = discordUser ? `${discordUser.username}#${discordUser.discriminator || '0'}` : 'Connecté';
-  showRolesChips({
-    roles: discordMember?.roles || []
-  });
-  logoutBtn.classList.remove('hide');
-  loginBtn.classList.add('hide');
-  $('#vouchSection').classList.remove('hide');
-  if (hasPremium) {
-    $('#vouchForm').classList.remove('hide');
-    accountState.innerHTML = `<div class="ok-text">Accès Premium/VIP validé ✔</div><div class="muted" style="font-size:13px">Tu peux utiliser la recherche.</div>`;
-    purchaseBlock.classList.add('hide');
-    activationBlock.classList.add('hide');
-    searchGate.classList.add('hide');
-    searchUI.classList.remove('hide');
-    updateSearchCountUI();
-  } else {
-    $('#vouchForm').classList.add('hide');
-    accountState.innerHTML = `<div class="danger-text">Accès Premium requis</div><div class="muted" style="font-size:13px">Achète Premium (16,99 €) ou active une clé existante.</div>`;
-    purchaseBlock.classList.remove('hide');
-    activationBlock.classList.remove('hide');
-    searchGate.classList.remove('hide');
-    searchUI.classList.add('hide');
-  }
-  loadVouches();
+  userBadge.textContent = discordUser ? `${discordUser.username}#${discordUser.discriminator || '0'}` : 'Connecté';
+  showRolesChips({
+    roles: discordMember?.roles || []
+  });
+  logoutBtn.classList.remove('hide');
+  loginBtn.classList.add('hide');
+  $('#vouchSection').classList.remove('hide');
+  if (hasPremium) {
+    $('#vouchForm').classList.remove('hide');
+    accountState.innerHTML = `<div class="ok-text">Accès Premium/VIP validé ✔</div><div class="muted" style="font-size:13px">Tu peux utiliser la recherche.</div>`;
+    purchaseBlock.classList.add('hide');
+    activationBlock.classList.add('hide');
+    searchGate.classList.add('hide');
+    searchUI.classList.remove('hide');
+    updateSearchCountUI();
+  } else {
+    $('#vouchForm').classList.add('hide');
+    accountState.innerHTML = `<div class="danger-text">Accès Premium requis</div><div class="muted" style="font-size:13px">Achète Premium (16,99 €) ou active une clé existante.</div>`;
+    purchaseBlock.classList.remove('hide');
+    activationBlock.classList.remove('hide');
+    searchGate.classList.remove('hide');
+    searchUI.classList.add('hide');
+  }
+  loadVouches();
 }
 async function updateFromDiscord(token) {
-  try {
-    showLoadingScreen('Connexion à Discord...');
-    discordUser = await fetchDiscordJSON(token, '/users/@me');
-    let memberObj = await fetchDiscordJSON(token, `/users/@me/guilds/${DISCORD.GUILD_ID}/member`);
-    discordMember = {
-      roles: (memberObj.roles || [])
-    };
-    saveSession();
-    const hasPremium = hasPremiumAccess();
-    setLoggedInUI(hasPremium);
-    hideLoadingScreen();
-  } catch (e) {
-    console.error('Erreur Discord :', e);
-    setLoggedOutUI();
-    hideLoadingScreen();
-  }
+  try {
+    showLoadingScreen('Connexion à Discord...');
+    discordUser = await fetchDiscordJSON(token, '/users/@me');
+    let memberObj = await fetchDiscordJSON(token, `/users/@me/guilds/${DISCORD.GUILD_ID}/member`);
+    discordMember = {
+      roles: (memberObj.roles || [])
+    };
+    saveSession();
+    const hasPremium = hasPremiumAccess();
+    setLoggedInUI(hasPremium);
+    hideLoadingScreen();
+  } catch (e) {
+    console.error('Erreur Discord :', e);
+    setLoggedOutUI();
+    hideLoadingScreen();
+  }
 }
 function logout() {
-  discordAuth = discordUser = discordMember = null;
-  saveSession();
-  setLoggedOutUI();
+  discordAuth = discordUser = discordMember = null;
+  saveSession();
+  setLoggedOutUI();
 }
 async function updateSearchCountUI() {
-  const user = auth.currentUser;
-  if (!user) return;
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    const userDoc = await db.collection('users').doc(user.uid).get();
-    const userData = userDoc.data() || {};
-    const searchCount = userData.searchCounts?.[today] || 0;
-    const remainingSearches = SEARCH_LIMIT_PER_DAY - searchCount;
-    $('#searchProgress').textContent = `${remainingSearches} recherches restantes sur ${SEARCH_LIMIT_PER_DAY} aujourd'hui.`;
-  } catch (e) {
-    console.error('Erreur de mise à jour du compteur:', e);
-  }
+  const user = auth.currentUser;
+  if (!user) return;
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const userDoc = await db.collection('users').doc(user.uid).get();
+    const userData = userDoc.data() || {};
+    const searchCount = userData.searchCounts?.[today] || 0;
+    const remainingSearches = SEARCH_LIMIT_PER_DAY - searchCount;
+    $('#searchProgress').textContent = `${remainingSearches} recherches restantes sur ${SEARCH_LIMIT_PER_DAY} aujourd'hui.`;
+  } catch (e) {
+    console.error('Erreur de mise à jour du compteur:', e);
+  }
 }
 
 /** =========================
@@ -1161,45 +1178,45 @@ $('#buyBtn').addEventListener('click', openStripePopupAndInitElements);
 $('#closePaymentBtn').addEventListener('click', () => $('#paymentPopup').style.display = 'none');
 $('#confirmPaymentBtn').addEventListener('click', confirmStripePayment);
 $('#haveKeyBtn').addEventListener('click', () => {
-  $('#purchaseBlock').classList.add('hide');
-  $('#activationBlock').classList.remove('hide');
+  $('#purchaseBlock').classList.add('hide');
+  $('#activationBlock').classList.remove('hide');
 });
 $('#activateKeyBtn').addEventListener('click', activateExistingKeyForUser);
 $('#submitVouch').addEventListener('click', submitVouch);
 
 // Permettre la recherche avec la touche Entrée
 $('#searchInput').addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    performSearch($('#searchInput').value);
-  }
+  if (e.key === 'Enter') {
+    performSearch($('#searchInput').value);
+  }
 });
 
 setupVouchCharacterCounter();
 
 // Initialisation
 (async function init() {
-  showLoadingScreen();
-  setLoggedOutUI();
-  try {
-    await auth.signInAnonymously();
-  } catch (e) {
-    console.error('Erreur de connexion anonyme:', e);
-  }
+  showLoadingScreen();
+  setLoggedOutUI();
+  try {
+    await auth.signInAnonymously();
+  } catch (e) {
+    console.error('Erreur de connexion anonyme:', e);
+  }
 
-  const parsedToken = parseImplicitToken();
-  if (parsedToken) {
-    discordAuth = parsedToken;
-    await updateFromDiscord(discordAuth.token);
-  } else {
-    loadSession();
-    if (discordAuth?.token) {
-      await updateFromDiscord(discordAuth.token);
-    } else {
-      hideLoadingScreen();
-    }
-  }
+  const parsedToken = parseImplicitToken();
+  if (parsedToken) {
+    discordAuth = parsedToken;
+    await updateFromDiscord(discordAuth.token);
+  } else {
+    loadSession();
+    if (discordAuth?.token) {
+      await updateFromDiscord(discordAuth.token);
+    } else {
+      hideLoadingScreen();
+    }
+  }
 
-  await handleStripeSuccess();
+  await handleStripeSuccess();
 })();
 </script>
 </body>
