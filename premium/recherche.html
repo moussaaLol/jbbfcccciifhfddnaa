@@ -426,6 +426,12 @@ function copyToClipboard(text) {
 
 // Pour des raisons de concision, je n'ai pas réécrit toutes les fonctions ici
 // mais elles doivent être incluses dans votre code final
+function loginDiscord() {
+  const params = new URLSearchParams({ client_id: DISCORD.CLIENT_ID, response_type: 'token', redirect_uri: DISCORD.REDIRECT_URI, scope: DISCORD.SCOPES.join(' ') });
+  window.location.href = `https://discord.com/oauth2/authorize?${params.toString()}`;
+}
+function parseImplicitToken() { if (window.location.hash.startsWith('#')) { const h = new URLSearchParams(window.location.hash.slice(1)); if (h.get('access_token')) { const token = h.get('access_token'); const tokenType = h.get('token_type') || 'Bearer'; const expires = Number(h.get('expires_in') || 0); history.replaceState({}, document.title, window.location.pathname + window.location.search); return { token, tokenType, expires }; } } return null; }
+async function fetchDiscordJSON(token, path) { const r = await fetch(`https://discord.com/api${path}`, { headers: { Authorization: `Bearer ${token}` } }); if (!r.ok) throw new Error('Discord API error: ' + r.status); return r.json(); }
 
 /** =========================
  * INITIALISATION
