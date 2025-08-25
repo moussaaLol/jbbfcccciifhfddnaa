@@ -514,14 +514,9 @@ $('#year').textContent = new Date().getFullYear();
 // Événements
 $('#loginBtn').addEventListener('click', loginDiscord);
 $('#logoutBtn').addEventListener('click', logout);
-$('#buyBtn').addEventListener('click', handleBuy);
-$('#haveKeyBtn').addEventListener('click', () => $('#activationBlock').scrollIntoView({ behavior: 'smooth', block: 'center' }));
-$('#activateKeyBtn').addEventListener('click', activateKeyHandler);
 $('#searchBtn').addEventListener('click', () => performSearch($('#searchInput').value));
 $('#closeSticky').addEventListener('click', () => $('#stickyKey').classList.add('hide'));
-$('#submitVouch').addEventListener('click', submitVouch);
-$('#closePaymentBtn').addEventListener('click', () => { $('#paymentPopup').style.display = 'none'; });
-$('#confirmPaymentBtn').addEventListener('click', confirmStripePayment);
+
 
 // Permettre la recherche avec la touche Entrée
 $('#searchInput').addEventListener('keypress', (e) => {
