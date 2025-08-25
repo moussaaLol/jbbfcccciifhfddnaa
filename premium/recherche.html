@@ -305,6 +305,8 @@ const STRIPE = {
   PUBLIC_KEY: 'pk_test_51Rys3a1EC7Cm7d9GpJkkTiJHhlAdD4aaRmKYvaAQownN4JmUK6R18VMB8K6RJ94iC5F6hxMarSCvv5lLc55zjlIF00wrJIQC07',
   CREATE_PAYMENT_INTENT_URL: '/create-payment-intent'
 };
+function showLoadingScreen(message = 'Chargement...') { const loadingScreen = $('#loadingScreen'); const loadingText = loadingScreen.querySelector('.loading-text'); if (message) { loadingText.innerHTML = message + '<span class="loading-dots"></span>'; } loadingScreen.style.display = 'flex'; setTimeout(() => { loadingScreen.style.opacity = '1'; }, 10); }
+function hideLoadingScreen() { const loadingScreen = $('#loadingScreen'); loadingScreen.style.opacity = '0'; setTimeout(() => { loadingScreen.style.display = 'none'; }, 500); }
 
 const FIREBASE_CFG = {
   apiKey: "AIzaSyBtVmI_0_9qC6Cj5lmYgbwVJlW8lH11Ouw",
