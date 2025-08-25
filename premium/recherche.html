@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Recherche Premium</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-functions.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f8f9fb; margin:0; padding:20px; }
+    .container { max-width:800px; margin:auto; background:#fff; padding:20px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1);}
+    h1 { text-align:center; }
+    input { width:100%; padding:10px; margin:10px 0; border-radius:8px; border:1px solid #ccc;}
+    button { padding:10px 20px; border:none; border-radius:8px; cursor:pointer; background:#007bff; color:#fff; }
+    button:hover { background:#0056b3; }
+    #results { margin-top:20px; }
+    .card { background:#f1f1f1; margin:10px 0; padding:10px; border-radius:8px; }
+    #loading { font-weight:bold; color:#007bff; margin-top:10px; display:none; }
+    .danger { color:red; text-align:center; }
+    .ok { color:green; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Recherche Premium</h1>
+    <div id="accessCheck">Vérification de ton accès Premium...</div>
+    <div id="searchSection" style="display:none;">
+      <input type="text" id="searchInput" placeholder="Entre un mot-clé...">
+      <button id="doSearch">Rechercher</button>
+      <div id="loading"></div>
+      <div id="progress"></div>
+      <div id="results"></div>
+    </div>
+    <div id="deniedSection" class="danger" style="display:none;">
+      🚫 Tu dois avoir le rôle Premium ou VIP sur notre serveur Discord pour accéder à cette recherche.
+    </div>
+  </div>
+
+  <script>
+    /** =========================
+     * CONFIG
+     * ========================= */
+    const DISCORD = {
+      CLIENT_ID: '1407764995671986249',
+      GUILD_ID: '1406489247543984240',
+      SCOPES: ['identify', 'guilds.members.read'],
+      REDIRECT_URI:'https://nazapi.dreamweave.lol/premium/recherche',
+      PREMIUM_ROLE_ID: '1406489247573086400',
+      VIP_ROLE_ID: '1406489247564824669'
+    };
+
+    const FIREBASE_CFG = {
+      apiKey: "AIzaSyBtVmI_0_9qC6Cj5lmYgbwVJlW8lH11Ouw",
+      authDomain: "nazapi-fc74e.firebaseapp.com",
+      projectId: "nazapi-fc74e",
+      storageBucket: "nazapi-fc74e.firebasestorage.app",
+      appId: "1:1011679210688:web:eeccc40063f83b91e3d125"
+    };
+
+    firebase.initializeApp(FIREBASE_CFG);
+    const auth = firebase.auth();
+    const functions = firebase.functions();
+
+    /** =========================
+     * DISCORD AUTH
+     * ========================= */
+    function loginDiscord() {
+      const params = new URLSearchParams({
+        client_id: DISCORD.CLIENT_ID,
+        response_type: 'token',
+        redirect_uri: DISCORD.REDIRECT_URI,
+        scope: DISCORD.SCOPES.join(' ')
+      });
+      window.location.href = `https://discord.com/oauth2/authorize?${params.toString()}`;
+    }
+
+    function parseImplicitToken() {
+      if (window.location.hash.startsWith('#')) {
+        const h = new URLSearchParams(window.location.hash.slice(1));
+        if (h.get('access_token')) {
+          const token = h.get('access_token');
+          history.replaceState({}, document.title, window.location.pathname);
+          return { token };
+        }
+      }
+      return null;
+    }
+
+    async function fetchDiscordJSON(token, path) {
+      const r = await fetch(`https://discord.com/api${path}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!r.ok) throw new Error("Erreur Discord API: " + r.status);
+      return r.json();
+    }
+
+    async function checkAccess() {
+      const authData = parseImplicitToken();
+      if (!authData) { loginDiscord(); return; }
+      try {
+        const user = await fetchDiscordJSON(authData.token, "/users/@me");
+        const member = await fetchDiscordJSON(authData.token, `/users/@me/guilds/${DISCORD.GUILD_ID}/member`);
+        const roles = member.roles || [];
+        if (roles.includes(DISCORD.PREMIUM_ROLE_ID) || roles.includes(DISCORD.VIP_ROLE_ID)) {
+          document.getElementById("accessCheck").style.display = "none";
+          document.getElementById("searchSection").style.display = "block";
+        } else {
+          document.getElementById("accessCheck").style.display = "none";
+          document.getElementById("deniedSection").style.display = "block";
+        }
+      } catch (e) {
+        console.error("Erreur Discord:", e);
+        document.getElementById("accessCheck").innerText = "Impossible de vérifier ton accès.";
+      }
+    }
+
+    checkAccess();
+
+    /** =========================
+     * RECHERCHE
+     * ========================= */
+    async function runSearch() {
+      const term = document.getElementById("searchInput").value.trim();
+      if (!term) return alert("Merci d’entrer un terme de recherche.");
+      const results = document.getElementById("results");
+      const loading = document.getElementById("loading");
+      const progress = document.getElementById("progress");
+      results.innerHTML = "";
+      loading.style.display = "block";
+      progress.textContent = "Initialisation de la recherche...";
+
+      try {
+        const searchFunction = functions.httpsCallable("searchFiles");
+        const response = await searchFunction({ query: term });
+        const found = response.data.results;
+        loading.style.display = "none";
+
+        if (!found || found.length === 0) {
+          progress.textContent = `Aucun résultat trouvé pour "${term}".`;
+          return;
+        }
+
+        progress.textContent = `Résultats : ${found.length} trouvé(s).`;
+        for (const r of found) {
+          const el = document.createElement("div");
+          el.className = "card";
+          el.innerHTML = `
+            <div><b>📄 ${r.nom}</b> — ${r.chemin}</div>
+            <pre style="white-space:pre-wrap">${r.ligne}</pre>`;
+          results.appendChild(el);
+        }
+      } catch (err) {
+        console.error("Erreur recherche:", err);
+        progress.textContent = "❌ Erreur lors de la recherche.";
+        loading.style.display = "none";
+      }
+    }
+
+    document.getElementById("doSearch").addEventListener("click", runSearch);
+  </script>
+</body>
+</html>
